@@ -1,25 +1,7 @@
-# Any private crt and keys #
-############################
-*.crt
-*.key
-*~
-\#*
+# Local .vscode directories
+**/.vscode/*
+*.code-workspace
 
-# OS Specific #
-###############
-Thumbs.db
-.DS_Store
-.vscode
+test.yml
 
-# Ansible specific #
-####################
-.cache
-*.retry
-
-# Python specific #
-###################
-__pycache__
-
-# Logs #
-########
-*.log
+ansible.cfg
