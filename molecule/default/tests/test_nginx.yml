@@ -1,0 +1,31 @@
+service:
+  nginx.service:
+    enabled: true
+    running: true
+user:
+  nginx:
+    exists: true
+    groups:
+      - nginx
+    shell: /bin/false
+group:
+  nginx:
+    exists: true
+process:
+  nginx:
+    running: true
+command:
+  nginx -t:
+    exit-status: 0
+    stderr:
+      [
+        "configuration file /etc/nginx/nginx.conf test is successful",
+        "the configuration file /etc/nginx/nginx.conf syntax is ok",
+      ]
+file:
+  /etc/nginx/nginx.conf:
+    exists: true
+    mode: "0644"
+    owner: root
+    group: root
+    filetype: file
