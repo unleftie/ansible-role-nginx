@@ -20,4 +20,4 @@
     dest: /etc/amplify-agent/agent.conf
     regexp: api_key =.*
     line: "api_key = {{ nginx_amplify_api_key }}"
-  notify: (Handler) Start NGINX Amplify agent
+  notify: start_amplify

@@ -133,6 +133,8 @@
         dest: "/tmp/{{ pcre_version }}.tar.gz"
         mode: 0600
       register: pcre_source
+      until: pcre_source is succeeded
+      retries: 5
 
     - name: Unpack PCRE dependency
       unarchive:
@@ -192,6 +194,8 @@
         dest: "/tmp/{{ zlib_version }}.tar.gz"
         mode: 0600
       register: zlib_source
+      until: zlib_source is succeeded
+      retries: 5
 
     - name: Unpack ZLib dependency
       unarchive:
@@ -251,6 +255,8 @@
         dest: "/tmp/{{ openssl_version }}.tar.gz"
         mode: 0600
       register: openssl_source
+      until: openssl_source is succeeded
+      retries: 5
 
     - name: Unpack OpenSSL dependency
       unarchive:
@@ -309,6 +315,8 @@
         dest: "/tmp/{{ nginx_version }}.tar.gz"
         mode: 0600
       register: nginx_source
+      until: nginx_source is succeeded
+      retries: 5
 
     - name: Unpack NGINX
       unarchive:
@@ -368,7 +376,7 @@
         state: restarted
         enabled: true
       when: ansible_facts['service_mgr'] == "systemd"
-      notify: "(Handler) Run NGINX"
+      notify: "run_nginx"
 
     - name: Upload upstart NGINX service file
       copy:
@@ -395,7 +403,7 @@
     - name: Start Upstart NGINX service reload
       command: nginx
       when: ansible_facts['service_mgr'] == "upstart"
-      notify: "(Handler) Run NGINX"
+      notify: "run_nginx"
 
     - name: Upload SysVinit NGINX service file
       copy:
@@ -405,7 +413,7 @@
         group: root
         mode: 0755
       when: ansible_facts['service_mgr'] == "sysvinit"
-      notify: "(Handler) Run NGINX"
+      notify: "run_nginx"
 
     - name: Upload OpenRC NGINX service file
       copy:
@@ -419,7 +427,7 @@
     - name: Enable OpenRC NGINX service
       command: rc-update add nginx default
       when: ansible_facts['service_mgr'] == "openrc"
-      notify: (Handler) Run NGINX
+      notify: run_nginx
   when:
     - not nginx_result.stat.exists | bool
     - not ansible_check_mode | bool

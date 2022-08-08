@@ -1,50 +1,64 @@
 ---
-- name: Ensure /etc/nginx/conf.d/ directory exists
+- name: Ensure default directories exists
   file:
-    path: /etc/nginx/conf.d/
+    path: "{{ item }}"
     owner: root
     group: root
     state: directory
     mode: 0755
-
-- name: Ensure /etc/nginx/includes/ directory exists
-  file:
-    path: /etc/nginx/includes/
-    owner: root
-    group: root
-    state: directory
-    mode: 0755
+  with_items:
+    - "/etc/nginx/conf.d"
+    - "/etc/nginx/includes"
 
 - name: Ensure /etc/nginx/conf.d/default.conf file is absent
   file:
     path: /etc/nginx/conf.d/default.conf
     state: absent
+  notify: reload_nginx
 
-- name: Copy https config
+- name: Copy https.include config
   template:
-    src: config/https.include.j2
+    src: https.include.j2
     dest: /etc/nginx/includes/https.include
+    owner: root
+    group: root
     mode: 0644
+  notify: reload_nginx
 
-- name: Copy https config
+- name: Copy default config
   template:
-    src: config/nginx.conf.j2
+    src: nginx.conf.j2
     dest: /etc/nginx/nginx.conf
+    owner: root
+    group: root
     mode: 0644
+  notify: reload_nginx
 
 - name: Generate selfsigned cert and key
-  shell: "stat /etc/ssl/private/nginx-selfsigned.key || openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/ssl/private/nginx-selfsigned.key -out /etc/ssl/certs/nginx-selfsigned.crt -batch"
+  shell: "stat /etc/ssl/private/nginx-selfsigned.key || \
+    openssl req -x509 -nodes -days 365 \
+    -newkey rsa:2048 \
+    -keyout /etc/ssl/private/nginx-selfsigned.key \
+    -out /etc/ssl/certs/nginx-selfsigned.crt
+    -batch"
   ignore_errors: true
+  changed_when: false
+  notify: reload_nginx
 
 - name: Generate dhparam
-  shell: "stat /etc/ssl/certs/dhparam.pem || openssl dhparam -out /etc/ssl/certs/dhparam.pem 2048"
+  shell: "stat /etc/ssl/certs/dhparam.pem || \
+    openssl dhparam -out /etc/ssl/certs/dhparam.pem 2048"
   ignore_errors: true
+  changed_when: false
+  notify: reload_nginx
 
-- name: Copy grafana config
+- name: Copy custom configs
   template:
-    src: config/grafana.conf.j2
-    dest: /etc/nginx/conf.d/grafana.conf
+    src: "{{ item }}"
+    dest: "/etc/nginx/conf.d/"
+    owner: root
+    group: root
     mode: 0644
-  when: (configure_grafana | bool) or
-    (configure_prometheus | bool)
-  notify: (Handler) Start/reload NGINX
+  with_fileglob:
+    - "templates/configs/*"
+  notify: reload_nginx

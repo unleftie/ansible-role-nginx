@@ -19,4 +19,4 @@
     update_cache: true
     allow_downgrade: "{{ omit if ansible_version.full is version('2.12', '<') else true }}"
   ignore_errors: "{{ ansible_check_mode }}"
-  notify: (Handler) Run NGINX
+  notify: run_nginx

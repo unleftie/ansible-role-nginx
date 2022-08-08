@@ -10,6 +10,9 @@
         url: "{{ keysite }}"
         dest: /etc/apk/keys/nginx_signing.rsa.pub
         mode: 0400
+      register: _download_file
+      until: _download_file is succeeded
+      retries: 5
   when: ansible_facts['os_family'] == "Alpine"
 
 - name: (Debian/Red Hat/SLES OSs) Set up NGINX signing key URL
