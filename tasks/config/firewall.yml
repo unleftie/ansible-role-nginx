@@ -1,5 +1,5 @@
 ---
-- name: Allow nginx from external.
+- name: Allow nginx from external
   iptables:
     chain: INPUT
     protocol: tcp
@@ -10,15 +10,6 @@
     state: present
     ctstate: NEW
     jump: ACCEPT
-    comment: nginx from external
+    comment: "nginx from external"
+  notify: save_iptables_rules
 
-- name: Save iptables state.
-  shell: "service iptables save"
-  when: ansible_os_family == 'RedHat'
-
-- name: Save iptables state.
-  community.general.iptables_state:
-    ip_version: ipv4
-    state: saved
-    path: /etc/iptables/rules.v4
-  when: ansible_os_family == 'Debian'

@@ -1,9 +1,9 @@
 ---
-- name: (Handler) Systemd daemon-reload
+- name: daemon_reload
   systemd:
     daemon_reload: true
 
-- name: (Handler) Start/reload NGINX
+- name: reload_nginx
   service:
     name: nginx
     state: reloaded
@@ -12,9 +12,9 @@
     - nginx_start | bool
     - nginx_state != "absent"
     - not ansible_check_mode | bool
-  listen: (Handler) Run NGINX
+  listen: run_nginx
 
-- name: (Handler) Check NGINX
+- name: check_nginx
   command: nginx -t
   args:
     chdir: "{{ ((ansible_facts['system'] | lower is not search('bsd')) | ternary('/etc/nginx', '/usr/local/sbin')) }}"
@@ -23,9 +23,9 @@
   check_mode: false
   changed_when: false
   when: nginx_state != "absent"
-  listen: (Handler) Run NGINX
+  listen: run_nginx
 
-- name: (Handler) Print NGINX error if syntax check fails
+- name: print_nginx_error
   debug:
     var: config_check.stderr_lines
   failed_when: config_check.rc != 0
@@ -34,12 +34,28 @@
     - config_check.stderr_lines != []
     - config_check.rc != 0
     - nginx_state != "absent"
-  listen: (Handler) Run NGINX
+  listen: run_nginx
 
-- name: (Handler) Start NGINX Amplify agent
+- name: start_amplify
   service:
     name: amplify-agent
     state: started
 
-- name: (Handler) Run logrotate
+- name: logrotate
   command: logrotate -f /etc/logrotate.d/nginx
+
+- name: save_iptables_rules
+  community.general.iptables_state:
+    ip_version: "ipv4"
+    state: saved
+    path: "/etc/sysconfig/iptables"
+  when: ansible_os_family == "RedHat"
+  listen: save_iptables_rules
+
+- name: save_iptables_rules
+  community.general.iptables_state:
+    ip_version: "ipv4"
+    state: saved
+    path: "/etc/iptables/rules.v4"
+  when: ansible_os_family == "Debian"
+  listen: save_iptables_rules
