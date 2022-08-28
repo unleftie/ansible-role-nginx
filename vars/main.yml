@@ -190,10 +190,24 @@ nginx_alpine_dependencies: ["ca-certificates", "coreutils", "openssl", "pcre2"]
 
 # Debian dependencies
 nginx_debian_dependencies:
-  ["apt-transport-https", "ca-certificates", "gpg-agent", "openssl"]
+  [
+    "apt-transport-https",
+    "ca-certificates",
+    "gpg-agent",
+    "openssl",
+    "python3-acme",
+    "python3-certbot",
+    "python3-mock",
+    "python3-openssl",
+    "python3-pkg-resources",
+    "python3-pyparsing",
+    "python3-zope.interface",
+    "python3-certbot-nginx",
+  ]
 
 # Red Hat dependencies
-nginx_redhat_dependencies: ["ca-certificates", "openssl"]
+nginx_redhat_dependencies:
+  ["ca-certificates", "openssl", "certbot", "python3-certbot-nginx"]
 
 # SLES dependencies
 nginx_sles_dependencies: ["ca-certificates"]
