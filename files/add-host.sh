@@ -1,5 +1,6 @@
 #! /bin/bash
-# version: 1.0
+# version: 1.1
+# nginx 1.19+ required
 
 # examples:
 # bash add-host.sh -h test.com
@@ -9,13 +10,70 @@
 
 set -o pipefail
 
-print_success() {
+function print_success() {
     printf '%s# %s%s\n' "$(printf '\033[32m')" "$*" "$(printf '\033[m')" >&2
 }
 
-print_error() {
+function print_warning() {
+    printf '%sERROR: %s%s\n' "$(printf '\033[31m')" "$*" "$(printf '\033[m')" >&2
+}
+
+function print_error() {
     printf '%sERROR: %s%s\n' "$(printf '\033[31m')" "$*" "$(printf '\033[m')" >&2
     exit 1
+}
+
+function get_keypress() {
+    local REPLY IFS=
+    printf >/dev/tty '%s' "$*"
+    [[ $ZSH_VERSION ]] && read -rk1
+    [[ $BASH_VERSION ]] && read </dev/tty -rn1
+    printf '%s' "$REPLY"
+}
+
+function get_yes_keypress() {
+    local prompt="${1:-Are you sure} [y/n]? "
+    local enter_return=$2
+    local REPLY
+    while REPLY=$(get_keypress "$prompt"); do
+        [[ $REPLY ]] && printf '\n'
+        case "$REPLY" in
+        Y | y) return 0 ;;
+        N | n) return 1 ;;
+        '') [[ $enter_return ]] && return "$enter_return" ;;
+        esac
+    done
+}
+
+function confirm() {
+    local prompt="${*:-Are you sure} [Y/n]? "
+    get_yes_keypress "$prompt" 0
+}
+
+function generate_https_config() {
+    CERTS_DIR_PATH="/etc/ssl/certs"
+    DH_PARAM_PATH="$CERTS_DIR_PATH/dhparam.pem"
+    DH_PARAM_SIZE="4096"
+
+    mkdir -p $CERTS_DIR_PATH
+    mkdir -p $SNIPPETS_DIR_PATH
+
+    [ ! -r "$DH_PARAM_PATH" ] && openssl dhparam -out $DH_PARAM_PATH $DH_PARAM_SIZE
+
+    echo "ssl_protocols TLSv1.3 TLSv1.2;
+    ssl_dhparam $DH_PARAM_PATH;
+    ssl_prefer_server_ciphers on;
+    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384;
+    ssl_ecdh_curve secp384r1;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_tickets off;
+    ssl_session_timeout 1d;
+    ssl_stapling on;
+    ssl_stapling_verify on;
+
+    resolver 1.1.1.1 8.8.8.8 valid=300s;
+    resolver_timeout 5s;
+    " | sed 's/^[ \t]*//' >$HTTPS_CONFIG_PATH
 }
 
 while getopts "h:e:t:" option; do
@@ -27,8 +85,9 @@ while getopts "h:e:t:" option; do
 done
 
 CONF_DIR_PATH="/etc/nginx/conf.d"
+SNIPPETS_DIR_PATH="/etc/nginx/snippets"
 CONF_FILE_PATH="$CONF_DIR_PATH/$HOSTNAME.conf"
-HTTPS_INCLUDE_PATH="/etc/nginx/includes/https.include"
+HTTPS_CONFIG_PATH="$SNIPPETS_DIR_PATH/https.conf"
 
 if [ ! -d "$CONF_DIR_PATH" ]; then
     print_error "Directory for configs does not exist: $CONF_DIR_PATH"
@@ -54,8 +113,9 @@ if [ -r "$CONF_FILE_PATH" ]; then
     print_error "File already exist: $CONF_FILE_PATH"
 fi
 
-if [ ! -r "$HTTPS_INCLUDE_PATH" ]; then
-    print_error "File does not exist: $HTTPS_INCLUDE_PATH"
+if [ ! -r "$HTTPS_CONFIG_PATH" ]; then
+    print_warning "File does not exist: $HTTPS_CONFIG_PATH"
+    confirm "Whether to generate HTTPS config" && generate_https_config || print_error "exit"
 fi
 
 if [ -z "$EXTRA_HOSTNAME" ]; then
@@ -86,9 +146,11 @@ else
 fi
 
 if [ -z "$EXTRA_HOSTNAME" ]; then
-    certbot --agree-tos --no-eff-email --authenticator nginx --installer null --keep-until-expiring -d $HOSTNAME
+    certbot --agree-tos --no-eff-email --authenticator nginx --installer null --keep-until-expiring \
+        --register-unsafely-without-email -d $HOSTNAME
 else
-    certbot --agree-tos --no-eff-email --authenticator nginx --installer null --keep-until-expiring -d $HOSTNAME -d $EXTRA_HOSTNAME
+    certbot --agree-tos --no-eff-email --authenticator nginx --installer null --keep-until-expiring \
+        --register-unsafely-without-email -d $HOSTNAME -d $EXTRA_HOSTNAME
 fi
 
 echo 'server {
@@ -105,7 +167,7 @@ server {
 
     server_name NGINX_HOSTNAME;
 
-    include HTTPS_INCLUDE_PATH;
+    include HTTPS_CONFIG_PATH;
 
     ssl_certificate /etc/letsencrypt/live/HOSTNAME/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/HOSTNAME/privkey.pem;
@@ -119,7 +181,7 @@ server {
 
 sed -i "s,NGINX_HOSTNAME,$NGINX_HOSTNAME,g" $CONF_FILE_PATH
 sed -i "s,HOSTNAME,$HOSTNAME,g" $CONF_FILE_PATH
-sed -i "s,HTTPS_INCLUDE_PATH,$HTTPS_INCLUDE_PATH,g" $CONF_FILE_PATH
+sed -i "s,HTTPS_CONFIG_PATH,$HTTPS_CONFIG_PATH,g" $CONF_FILE_PATH
 
 if [ -z "$TARGET" ]; then
     sed -i "s,proxy_pass http://TARGET,return 403,g" $CONF_FILE_PATH
