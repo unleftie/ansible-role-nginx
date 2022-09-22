@@ -1,6 +1,9 @@
 #! /bin/bash
-# version: 1.1
-# nginx 1.19+ required
+# version: 1.2
+
+# nginx 1.19.4+ required
+# openssl 1.1.1+ required
+# apt install openssl python3-certbot-nginx python3-certbot python3-acme python3-zope.interface -y
 
 # examples:
 # bash add-host.sh -h test.com
@@ -10,12 +13,26 @@
 
 set -o pipefail
 
+while getopts "h:e:t:" option; do
+    case "${option}" in
+    h) HOSTNAME=${OPTARG} ;;
+    e) EXTRA_HOSTNAME=${OPTARG} ;;
+    t) TARGET=${OPTARG} ;;
+    esac
+done
+
+CONF_DIR_PATH="/etc/nginx/conf.d"
+CONF_FILE_PATH="$CONF_DIR_PATH/$HOSTNAME.conf"
+
+SNIPPETS_DIR_PATH="/etc/nginx/snippets"
+HTTPS_CONFIG_PATH="$SNIPPETS_DIR_PATH/https.conf"
+
 function print_success() {
     printf '%s# %s%s\n' "$(printf '\033[32m')" "$*" "$(printf '\033[m')" >&2
 }
 
 function print_warning() {
-    printf '%sERROR: %s%s\n' "$(printf '\033[31m')" "$*" "$(printf '\033[m')" >&2
+    printf '%sWARNING: %s%s\n' "$(printf '\033[31m')" "$*" "$(printf '\033[m')" >&2
 }
 
 function print_error() {
@@ -31,8 +48,8 @@ function get_keypress() {
     printf '%s' "$REPLY"
 }
 
-function get_yes_keypress() {
-    local prompt="${1:-Are you sure} [y/n]? "
+function confirm() {
+    local prompt="${1:-Are you sure?} [y/n] "
     local enter_return=$2
     local REPLY
     while REPLY=$(get_keypress "$prompt"); do
@@ -45,15 +62,10 @@ function get_yes_keypress() {
     done
 }
 
-function confirm() {
-    local prompt="${*:-Are you sure} [Y/n]? "
-    get_yes_keypress "$prompt" 0
-}
-
 function generate_https_config() {
-    CERTS_DIR_PATH="/etc/ssl/certs"
-    DH_PARAM_PATH="$CERTS_DIR_PATH/dhparam.pem"
-    DH_PARAM_SIZE="4096"
+    local CERTS_DIR_PATH="/etc/ssl/certs"
+    local DH_PARAM_PATH="$CERTS_DIR_PATH/dhparam.pem"
+    local DH_PARAM_SIZE="2048"
 
     mkdir -p $CERTS_DIR_PATH
     mkdir -p $SNIPPETS_DIR_PATH
@@ -76,19 +88,6 @@ function generate_https_config() {
     " | sed 's/^[ \t]*//' >$HTTPS_CONFIG_PATH
 }
 
-while getopts "h:e:t:" option; do
-    case "${option}" in
-    h) HOSTNAME=${OPTARG} ;;
-    e) EXTRA_HOSTNAME=${OPTARG} ;;
-    t) TARGET=${OPTARG} ;;
-    esac
-done
-
-CONF_DIR_PATH="/etc/nginx/conf.d"
-SNIPPETS_DIR_PATH="/etc/nginx/snippets"
-CONF_FILE_PATH="$CONF_DIR_PATH/$HOSTNAME.conf"
-HTTPS_CONFIG_PATH="$SNIPPETS_DIR_PATH/https.conf"
-
 if [ ! -d "$CONF_DIR_PATH" ]; then
     print_error "Directory for configs does not exist: $CONF_DIR_PATH"
 fi
@@ -110,12 +109,13 @@ if [[ $TARGET == *"http://"* ]] || [[ $TARGET == *"https://"* ]]; then
 fi
 
 if [ -r "$CONF_FILE_PATH" ]; then
-    print_error "File already exist: $CONF_FILE_PATH"
+    print_warning "File already exist: $CONF_FILE_PATH"
+    confirm "Whether to replace file?" && rm -rf $CONF_FILE_PATH || print_error "exit"
 fi
 
 if [ ! -r "$HTTPS_CONFIG_PATH" ]; then
     print_warning "File does not exist: $HTTPS_CONFIG_PATH"
-    confirm "Whether to generate HTTPS config" && generate_https_config || print_error "exit"
+    confirm "Whether to generate HTTPS config?" && generate_https_config || print_error "exit"
 fi
 
 if [ -z "$EXTRA_HOSTNAME" ]; then
