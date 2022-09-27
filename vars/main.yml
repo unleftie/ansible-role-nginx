@@ -19,6 +19,12 @@ nginx_type: opensource
 # Start NGINX service.
 nginx_start: true
 
+nginx_dhparam_path: "/etc/ssl/certs/dhparam.pem"
+
+# selfsigned
+nginx_selfsigned_key_path: "/etc/ssl/private/nginx-selfsigned.key"
+nginx_selfsigned_cert_path: "/etc/ssl/certs/nginx-selfsigned-cert.pem"
+
 # Specify repository origin for NGINX Open Source.
 # Options are 'nginx_repository', 'source' or 'os_repository'.
 # Only works if 'nginx_type' is set to 'opensource'.

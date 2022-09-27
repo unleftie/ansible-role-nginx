@@ -71,21 +71,27 @@
     - nginx_debug_output | bool
     - nginx_state != "absent"
 
-- name: Configure logrotate for NGINX
+- name: Configure logrotate
   include_tasks: "{{ role_path }}/tasks/config/setup-logrotate.yml"
   when:
     - nginx_logrotate_conf_enable | bool
     - nginx_state != "absent"
 
-- name: Copy external config for NGINX
-  include_tasks: "{{ role_path }}/tasks/config/copy-config.yml"
+- name: Generate selfsigned parameters
+  include_tasks: "{{ role_path }}/tasks/selfsigned/generate.yml"
   when:
     - nginx_state != "absent"
 
-- name: Add firewall rules for NGINX
-  include_tasks: "{{ role_path }}/tasks/config/firewall.yml"
+- name: Generate configs
+  include_tasks: "{{ role_path }}/tasks/config/default.yml"
   when:
     - nginx_state != "absent"
+
+- name: Configure firewall rules
+  include_tasks: "{{ role_path }}/tasks/config/firewall-rules.yml"
+  when:
+    - nginx_state != "absent"
+    - nginx_configure_firewall | bool
 
 - name: Install NGINX Amplify
   include_tasks: "{{ role_path }}/tasks/amplify/install-amplify.yml"

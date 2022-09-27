@@ -1,0 +1,28 @@
+---
+- name: Check if selfsigned cert file exists
+  stat:
+    path: "{{ nginx_selfsigned_cert_path }}"
+  register: _selfsigned_cert_file_check
+
+- name: Generate selfsigned cert and key
+  shell: "openssl req -x509 -nodes -days 365 \
+    -newkey rsa:2048 \
+    -keyout {{ nginx_selfsigned_key_path }} \
+    -out {{ nginx_selfsigned_cert_path }} \
+    -batch"
+  ignore_errors: true
+  changed_when: false
+  when: not _selfsigned_cert_file_check.stat.exists
+  notify: reload_nginx
+
+- name: Check if DH parameters file exists
+  stat:
+    path: "{{ nginx_dhparam_path }}"
+  register: _dhparam_file_check
+
+- name: Generate DH parameters
+  shell: "openssl dhparam -out {{ nginx_dhparam_path }} 2048"
+  ignore_errors: true
+  changed_when: false
+  when: not _dhparam_file_check.stat.exists
+  notify: reload_nginx

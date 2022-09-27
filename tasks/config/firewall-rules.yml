@@ -12,4 +12,3 @@
     jump: ACCEPT
     comment: "nginx from external"
   notify: save_iptables_rules
-
