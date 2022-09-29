@@ -8,7 +8,7 @@ nginx_enable: true
 nginx_debug_output: false
 
 # Options are 'opensource' or 'plus'.
-nginx_type: opensource
+nginx_type: "opensource"
 
 # (Optional) Specify which version of NGINX you want to install.
 # Default is to install the latest release.
@@ -62,7 +62,7 @@ nginx_static_modules: ["http_ssl_module"]
 # Options are 'mainline' or 'stable'.
 # Only works if 'install_from' is set to 'nginx_repository' or 'source'.
 # Default is mainline.
-nginx_branch: mainline
+nginx_branch: "mainline"
 
 # Location of your NGINX Plus license in your local machine.
 # Default is the files folder within the NGINX Ansible role.
