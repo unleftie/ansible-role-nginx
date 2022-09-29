@@ -1,5 +1,5 @@
 #! /bin/bash
-# version: 1.2
+# version: 1.3
 
 # nginx 1.19.4+ required
 # openssl 1.1.1+ required
@@ -29,6 +29,7 @@ GENERAL_CONFIG_PATH="$SNIPPETS_DIR_PATH/general.conf"
 HTTPS_CONFIG_PATH="$SNIPPETS_DIR_PATH/https.conf"
 LETSENCRYPT_CONFIG_PATH="$SNIPPETS_DIR_PATH/letsencrypt.conf"
 SECURITY_CONFIG_PATH="$SNIPPETS_DIR_PATH/security.conf"
+PROXY_CONFIG_PATH="$SNIPPETS_DIR_PATH/proxy.conf"
 
 function print_success() {
     printf '%s# %s%s\n' "$(printf '\033[32m')" "$*" "$(printf '\033[m')" >&2
@@ -77,19 +78,6 @@ function generate_general_config() {
     # robots.txt
     location = /robots.txt {
         log_not_found off;
-        access_log off;
-    }
-
-    # assets, media
-    location ~* \.(?:css(\.map)?|js(\.map)?|jpe?g|png|gif|ico|cur|heic|webp|tiff?|mp3|m4a|aac|ogg|midi?|wav|mp4|mov|webm|mpe?g|avi|ogv|flv|wmv)$ {
-        expires 7d;
-        access_log off;
-    }
-
-    # svg, fonts
-    location ~* \.(?:svgz?|ttf|ttc|otf|eot|woff2?)$ {
-        add_header Access-Control-Allow-Origin "*";
-        expires 7d;
         access_log off;
     }
 
@@ -155,6 +143,35 @@ function generate_security_config() {
     ' | sed 's/^[ \t]*//' >$SECURITY_CONFIG_PATH
 }
 
+function generate_proxy_config() {
+    mkdir -p $SNIPPETS_DIR_PATH
+
+    echo 'proxy_http_version 1.1;
+
+    # Cache
+    proxy_cache_bypass $http_upgrade;
+    proxy_cache_valid any 10m;
+    proxy_cache default;
+    proxy_set_header X-Proxy-Cache $upstream_cache_status;
+
+    # Proxy headers
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection $connection_upgrade;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header Forwarded $proxy_add_forwarded;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-Host $host;
+    proxy_set_header X-Forwarded-Port $server_port;
+
+    # Proxy timeouts
+    proxy_connect_timeout 60s;
+    proxy_send_timeout 60s;
+    proxy_read_timeout 60s;
+    ' | sed 's/^[ \t]*//' >$PROXY_CONFIG_PATH
+}
+
 if [ ! -d "$CONF_DIR_PATH" ]; then
     print_error "Directory for configs does not exist: $CONF_DIR_PATH"
 fi
@@ -198,6 +215,11 @@ fi
 if [ ! -r "$SECURITY_CONFIG_PATH" ]; then
     print_warning "File does not exist: $SECURITY_CONFIG_PATH"
     confirm "Whether to generate required security config file?" && generate_security_config || print_error "exit"
+fi
+
+if [ ! -r "$PROXY_CONFIG_PATH" ]; then
+    print_warning "File does not exist: $PROXY_CONFIG_PATH"
+    confirm "Whether to generate required proxy config file?" && generate_proxy_config || print_error "exit"
 fi
 
 if [ -z "$EXTRA_HOSTNAME" ]; then
