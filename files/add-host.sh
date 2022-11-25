@@ -5,24 +5,28 @@
 # openssl 1.1.1+ required
 # apt install openssl python3-certbot-nginx python3-certbot python3-acme python3-zope.interface -y
 
-# examples:
-# bash add-host.sh -h test.com
-# bash add-host.sh -h test.com -t localhost:8080
-# bash add-host.sh -h test.com -e www.test.com
-# bash add-host.sh -h test.com -e www.test.com -t localhost:8080
+# make sure that DNS entry points to your instance
+
+# examples (interractive):
+# ./add-host.sh
+
+# examples (with predefined values):
+# ./add-host.sh -h test.com
+# ./add-host.sh -h test.com -t localhost:8080
+# ./add-host.sh -h test.com -e www.test.com
+# ./add-host.sh -h test.com -e www.test.com -t localhost:8080
 
 set -o pipefail
 
 while getopts "h:e:t:" option; do
     case "${option}" in
-    h) HOSTNAME=${OPTARG} ;;
+    h) DEFAULT_HOSTNAME=${OPTARG} ;;
     e) EXTRA_HOSTNAME=${OPTARG} ;;
     t) TARGET=${OPTARG} ;;
     esac
 done
 
 CONF_DIR_PATH="/etc/nginx/conf.d"
-CONF_FILE_PATH="$CONF_DIR_PATH/$HOSTNAME.conf"
 
 SNIPPETS_DIR_PATH="/etc/nginx/snippets"
 GENERAL_CONFIG_PATH="$SNIPPETS_DIR_PATH/general.conf"
@@ -42,6 +46,11 @@ function print_warning() {
 function print_error() {
     printf '%sERROR: %s%s\n' "$(printf '\033[31m')" "$*" "$(printf '\033[m')" >&2
     exit 1
+}
+
+function get_input() {
+    [[ $ZSH_VERSION ]] && read "$2"\?"$1"
+    [[ $BASH_VERSION ]] && read -p "$1" "$2"
 }
 
 function get_keypress() {
@@ -176,21 +185,28 @@ if [ ! -d "$CONF_DIR_PATH" ]; then
     print_error "Directory for configs does not exist: $CONF_DIR_PATH"
 fi
 
-if [ -z "$HOSTNAME" ]; then
-    print_error "Not enough arguments: [-h HOSTNAME]"
+if [[ "$DEFAULT_HOSTNAME" == "" ]]; then
+    get_input "Hostname: " DEFAULT_HOSTNAME
+    [ "${DEFAULT_HOSTNAME//[A-Za-z0-9._-]/}" ] && print_error "Valid characters for 'Hostname' value are 'A-Z', 'a-z', '0-9' and '._-'"
+    get_input "Extra hostname ['Enter' to skip]: " EXTRA_HOSTNAME
+    [ "${EXTRA_HOSTNAME//[A-Za-z0-9._-]/}" ] && print_error "Valid characters for 'Extra hostname' value are 'A-Z', 'a-z', '0-9', and '._-'"
+    get_input "Target ['Enter' to skip]: " TARGET
+    [ "${TARGET//[A-Za-z0-9:._-]/}" ] && print_error "Valid characters for 'Target' value are 'A-Z', 'a-z', '0-9' and '._-:'"
 fi
 
-if [[ $HOSTNAME == *"http://"* ]] || [[ $HOSTNAME == *"https://"* ]]; then
-    print_error "Do not use 'http://' or 'https://' in variable: [-h HOSTNAME]"
+if [[ $DEFAULT_HOSTNAME == *"http://"* ]] || [[ $DEFAULT_HOSTNAME == *"https://"* ]]; then
+    print_error "Do not use 'http://' or 'https://' for 'Hostname' variable"
 fi
 
 if [[ $EXTRA_HOSTNAME == *"http://"* ]] || [[ $EXTRA_HOSTNAME == *"https://"* ]]; then
-    print_error "Do not use 'http://' or 'https://' in variable: [-e EXTRA_HOSTNAME]"
+    print_error "Do not use 'http://' or 'https://' for 'Extra hostname' variable"
 fi
 
 if [[ $TARGET == *"http://"* ]] || [[ $TARGET == *"https://"* ]]; then
-    print_error "Do not use 'http://' or 'https://' in variable: [-t TARGET]"
+    print_error "Do not use 'http://' or 'https://' for 'Target' variable"
 fi
+
+CONF_FILE_PATH="$CONF_DIR_PATH/$DEFAULT_HOSTNAME.conf"
 
 if [ -r "$CONF_FILE_PATH" ]; then
     print_warning "File already exist: $CONF_FILE_PATH"
@@ -222,10 +238,10 @@ if [ ! -r "$PROXY_CONFIG_PATH" ]; then
     confirm "Whether to generate required proxy config file?" && generate_proxy_config || print_error "exit"
 fi
 
-if [ -z "$EXTRA_HOSTNAME" ]; then
-    NGINX_HOSTNAME="$HOSTNAME"
+if [[ "$EXTRA_HOSTNAME" == "" ]]; then
+    NGINX_HOSTNAME="$DEFAULT_HOSTNAME"
 else
-    NGINX_HOSTNAME="$HOSTNAME $EXTRA_HOSTNAME"
+    NGINX_HOSTNAME="$DEFAULT_HOSTNAME $EXTRA_HOSTNAME"
 fi
 
 echo 'server {
@@ -251,10 +267,10 @@ fi
 
 if [ -z "$EXTRA_HOSTNAME" ]; then
     certbot --agree-tos --no-eff-email --authenticator nginx --installer null --keep-until-expiring \
-        --register-unsafely-without-email -d $HOSTNAME
+        --register-unsafely-without-email -d $DEFAULT_HOSTNAME
 else
     certbot --agree-tos --no-eff-email --authenticator nginx --installer null --keep-until-expiring \
-        --register-unsafely-without-email -d $HOSTNAME -d $EXTRA_HOSTNAME
+        --register-unsafely-without-email -d $DEFAULT_HOSTNAME -d $EXTRA_HOSTNAME
 fi
 
 echo 'server {
@@ -273,26 +289,28 @@ server {
 
     server_name NGINX_HOSTNAME;
 
-    include HTTPS_CONFIG_PATH;
+    include GENERAL_CONFIG_PATH;
     include HTTPS_CONFIG_PATH;
     include SECURITY_CONFIG_PATH;
 
-    ssl_certificate /etc/letsencrypt/live/HOSTNAME/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/HOSTNAME/privkey.pem;
-    ssl_trusted_certificate /etc/letsencrypt/live/HOSTNAME/chain.pem;
+    ssl_certificate /etc/letsencrypt/live/DEFAULT_HOSTNAME/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/DEFAULT_HOSTNAME/privkey.pem;
+    ssl_trusted_certificate /etc/letsencrypt/live/DEFAULT_HOSTNAME/chain.pem;
 
     location / {
-        proxy_set_header Host $http_host;
+        include PROXY_CONFIG_PATH;
         proxy_pass http://TARGET;
     }
 }
 ' >$CONF_FILE_PATH
 
 sed -i "s,NGINX_HOSTNAME,$NGINX_HOSTNAME,g" $CONF_FILE_PATH
-sed -i "s,HOSTNAME,$HOSTNAME,g" $CONF_FILE_PATH
+sed -i "s,DEFAULT_HOSTNAME,$DEFAULT_HOSTNAME,g" $CONF_FILE_PATH
+sed -i "s,GENERAL_CONFIG_PATH,$GENERAL_CONFIG_PATH,g" $CONF_FILE_PATH
 sed -i "s,LETSENCRYPT_CONFIG_PATH,$LETSENCRYPT_CONFIG_PATH,g" $CONF_FILE_PATH
 sed -i "s,HTTPS_CONFIG_PATH,$HTTPS_CONFIG_PATH,g" $CONF_FILE_PATH
 sed -i "s,SECURITY_CONFIG_PATH,$SECURITY_CONFIG_PATH,g" $CONF_FILE_PATH
+sed -i "s,PROXY_CONFIG_PATH,$PROXY_CONFIG_PATH,g" $CONF_FILE_PATH
 
 if [ -z "$TARGET" ]; then
     sed -i "s,proxy_pass http://TARGET,return 403,g" $CONF_FILE_PATH
@@ -309,7 +327,7 @@ else
 fi
 
 print_success "Config file path: $CONF_FILE_PATH"
-print_success "Hostname: https://$HOSTNAME"
+print_success "Hostname: https://$DEFAULT_HOSTNAME"
 
 if [ ! -z "$EXTRA_HOSTNAME" ]; then
     print_success "Hostname: https://$EXTRA_HOSTNAME"
