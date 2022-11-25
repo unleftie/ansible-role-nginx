@@ -91,7 +91,6 @@
   include_tasks: "{{ role_path }}/tasks/config/firewall-rules.yml"
   when:
     - nginx_state != "absent"
-    - nginx_configure_firewall | bool
 
 - name: Install NGINX Amplify
   include_tasks: "{{ role_path }}/tasks/amplify/install-amplify.yml"

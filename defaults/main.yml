@@ -17,5 +17,6 @@ nginx_setup: "install"
 nginx_manage_repo: true
 
 nginx_user: "nginx"
+# nginx_user: "www-data"
 
 nginx_configure_firewall: false

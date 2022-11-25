@@ -7,7 +7,7 @@
     destination_ports:
       - "80"
       - "443"
-    state: present
+    state: "{{ 'present' if (nginx_configure_firewall | bool) else 'absent' }}"
     ctstate: NEW
     jump: ACCEPT
     comment: "nginx from external"
