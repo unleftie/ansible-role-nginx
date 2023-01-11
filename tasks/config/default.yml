@@ -59,3 +59,14 @@
   with_fileglob:
     - "templates/configs/*"
   notify: reload_nginx
+
+- name: Download Cloudflare CA certificate
+  get_url:
+    url: "https://developers.cloudflare.com/ssl/static/authenticated_origin_pull_ca.pem"
+    dest: "/etc/ssl/certs/cloudflare.crt"
+    owner: root
+    group: root
+    mode: 0640
+  register: _download_file
+  until: _download_file is succeeded
+  retries: 5
