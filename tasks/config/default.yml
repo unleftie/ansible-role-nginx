@@ -62,7 +62,7 @@
 
 - name: Download Cloudflare CA certificate
   get_url:
-    url: "https://developers.cloudflare.com/ssl/static/authenticated_origin_pull_ca.pem"
+    url: "{{ nginx_cloudflare_ca_cert_url }}"
     dest: "/etc/ssl/certs/cloudflare.crt"
     owner: root
     group: root

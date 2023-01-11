@@ -351,3 +351,5 @@ nginx_logrotate_conf:
     - notifempty
     - create 0644 www-data adm # Changes nginx logs permissions
     - sharedscripts
+
+nginx_cloudflare_ca_cert_url: "https://developers.cloudflare.com/ssl/static/authenticated_origin_pull_ca.pem"
