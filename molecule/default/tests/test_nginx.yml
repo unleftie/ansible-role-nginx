@@ -7,7 +7,10 @@ user:
     exists: true
     groups:
       - nginx
-    shell: /bin/false
+    shell:
+      or:
+        - "/bin/false"
+        - "/sbin/nologin"
 group:
   nginx:
     exists: true
