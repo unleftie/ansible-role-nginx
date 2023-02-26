@@ -232,33 +232,21 @@ nginx_default_repository_alpine:
   alpine/v{{ ansible_facts['distribution_version'] | regex_search('^[0-9]+\\.[0-9]+') }}/main"
 nginx_default_repository_amazon: "https://nginx.org/packages/{{ (nginx_branch == 'mainline') | ternary('mainline/', '') }}/amzn2/$releasever/$basearch"
 nginx_default_repository_debian:
-  - "deb [arch={{ (ansible_facts['architecture'] == 'aarch64') | ternary('arm64', 'amd64') }} signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] https://nginx.org/packages/{{ (nginx_branch == 'mainline') | ternary('mainline/', '') }}\
-    {{ ansible_facts['distribution'] | lower }}/ {{ ansible_facts['distribution_release'] }} nginx"
-  - "deb-src [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] https://nginx.org/packages/{{ (nginx_branch == 'mainline') | ternary('mainline/', '') }}\
-    {{ ansible_facts['distribution'] | lower }}/ {{ ansible_facts['distribution_release'] }} nginx"
-nginx_default_repository_redhat:
-  "https://nginx.org/packages/{{ (nginx_branch == 'mainline') | ternary('mainline/', '') }}\
-  {{ (ansible_facts['distribution'] == 'CentOS') | ternary('centos', 'rhel') }}/\
-  {{ ansible_facts['distribution_major_version'] }}/$basearch/"
-nginx_default_repository_suse:
-  "https://nginx.org/packages/{{ (nginx_branch == 'mainline') | ternary('mainline/', '') }}\
-  sles/{{ ansible_facts['distribution_major_version'] }}"
+  - deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] https://nginx.org/packages/{{ (nginx_branch == 'mainline') | ternary('mainline/', '') }}{{ ansible_facts['distribution'] | lower }}/ {{ ansible_facts['distribution_release'] }} nginx
+  - deb-src [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] https://nginx.org/packages/{{ (nginx_branch == 'mainline') | ternary('mainline/', '') }}{{ ansible_facts['distribution'] | lower }}/ {{ ansible_facts['distribution_release'] }} nginx
+nginx_default_repository_redhat: https://nginx.org/packages/{{ (nginx_branch == 'mainline') | ternary('mainline/', '') }}{{ (ansible_facts['distribution'] == 'CentOS') | ternary('centos', 'rhel') }}/{{ ansible_facts['distribution_major_version'] }}/$basearch/
+nginx_default_repository_suse: https://nginx.org/packages/{{ (nginx_branch == 'mainline') | ternary('mainline/', '') }}sles/{{ ansible_facts['distribution_major_version'] }}
 
 # Default NGINX Plus repositories
-nginx_plus_default_repository_alpine: "https://pkgs.nginx.com/plus/alpine/v{{ ansible_facts['distribution_version'] | regex_search('^[0-9]+\\.[0-9]+') }}/main"
-nginx_plus_default_repository_amazon: "https://pkgs.nginx.com/plus/amzn{{ (ansible_facts['distribution_major_version'] is version('2', '==')) | ternary('2', '') }}/$releasever/$basearch"
-nginx_plus_default_repository_debian: "deb [arch={{ (ansible_facts['architecture'] == 'aarch64') | ternary('arm64', 'amd64') }} signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] https://pkgs.nginx.com/plus/{{ ansible_facts['distribution'] | lower }} {{ ansible_facts['distribution_release'] }} nginx-plus"
-nginx_plus_default_repository_freebsd: "https://pkgs.nginx.com/plus/freebsd/${ABI}/latest"
-nginx_plus_default_repository_redhat:
-  "https://pkgs.nginx.com/plus/{{ (ansible_facts['distribution'] == 'CentOS') | ternary('centos', 'rhel') }}/\
-  {{ (ansible_facts['distribution_version'] is version('7.4', '>=')
-  and ansible_facts['distribution_version'] is version('8', '<')) | ternary('7.4', ansible_facts['distribution_major_version']) }}/$basearch/"
-nginx_plus_default_repository_suse:
-  "https://pkgs.nginx.com/plus/sles/{{ ansible_facts['distribution_major_version'] }}\
-  ?ssl_clientcert=/etc/ssl/nginx/nginx-repo-bundle.crt&ssl_verify=peer"
+nginx_plus_default_repository_alpine: https://pkgs.nginx.com/plus/alpine/v{{ ansible_facts['distribution_version'] | regex_search('^[0-9]+\.[0-9]+') }}/main
+nginx_plus_default_repository_amazon: https://pkgs.nginx.com/plus/amzn{{ (ansible_facts['distribution_major_version'] is version('2', '==')) | ternary('2', '') }}/$releasever/$basearch
+nginx_plus_default_repository_debian: deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] https://pkgs.nginx.com/plus/{{ ansible_facts['distribution'] | lower }} {{ ansible_facts['distribution_release'] }} nginx-plus
+nginx_plus_default_repository_freebsd: https://pkgs.nginx.com/plus/freebsd/${ABI}/latest
+nginx_plus_default_repository_redhat: https://pkgs.nginx.com/plus/{{ (ansible_facts['distribution'] == 'CentOS') | ternary('centos', 'rhel') }}/{{ (ansible_facts['distribution_version'] is version('7.4', '>=') and ansible_facts['distribution_version'] is version('8', '<')) | ternary('7.4', ansible_facts['distribution_major_version']) }}/$basearch/
+nginx_plus_default_repository_suse: https://pkgs.nginx.com/plus/sles/{{ ansible_facts['distribution_major_version'] }}?ssl_clientcert=/etc/ssl/nginx/nginx-repo-bundle.crt&ssl_verify=peer
 
 # Alpine dependencies
-nginx_alpine_dependencies: ["ca-certificates", "coreutils", "openssl", "pcre2"]
+nginx_alpine_dependencies: [ca-certificates, coreutils, openssl, pcre2]
 
 # Debian dependencies
 nginx_debian_dependencies:
@@ -278,131 +266,48 @@ nginx_debian_dependencies:
     "iptables",
   ]
 
+# FreeBSD dependencies
+nginx_freebsd_dependencies: [security/ca_root_nss]
+
 # Red Hat dependencies
 nginx_redhat_dependencies:
   ["ca-certificates", "openssl", "certbot", "python3-certbot-nginx", "iptables"]
 
 # SLES dependencies
-nginx_sles_dependencies: ["ca-certificates"]
+nginx_sles_dependencies: [ca-certificates]
 
-# FreeBSD dependencies
-nginx_freebsd_dependencies: ["security/ca_root_nss"]
-
-# Default locations and versions when 'nginx_install_from' is set to 'source'
-pcre_version: pcre-8.45
-zlib_version: zlib-1.2.11
-openssl_version: openssl-1.1.1m
+# Default locations and versions when 'nginx_install_from' is set to 'source'.
+# Set 'pcre_release' to 1 to install PCRE 1, modify the 'openssl_version' to move back to 1.1.1.
+pcre_release: 2
+pcre_version: 10.42
+zlib_version: 1.2.13
+openssl_version: 3.0.7
 
 # Supported NGINX Open Source dynamic modules
-nginx_modules_list: ["geoip", "image-filter", "njs", "perl", "xslt"]
+nginx_modules_list: [geoip, image-filter, njs, perl, xslt]
 
 # Supported NGINX Plus dynamic modules
 nginx_plus_modules_list:
   [
-    "auth-spnego",
-    "brotli",
-    "encrypted-session",
-    "geoip",
-    "geoip2",
-    "headers-more",
-    "image-filter",
-    "lua",
-    "njs",
-    "opentracing",
-    "passenger",
-    "perl",
-    "prometheus",
-    "rtmp",
-    "subs-filter",
-    "xslt",
+    auth-spnego,
+    brotli,
+    encrypted-session,
+    geoip,
+    geoip2,
+    headers-more,
+    image-filter,
+    lua,
+    ndk,
+    njs,
+    opentracing,
+    passenger,
+    perl,
+    prometheus,
+    rtmp,
+    set-misc,
+    subs-filter,
+    xslt,
   ]
-
-# Install NGINX Amplify.
-# Use your NGINX Amplify API key.
-# Requires access to either the NGINX stub_status or the NGINX Plus REST API.
-# Default is null.
-nginx_amplify_enable: false
-nginx_amplify_api_key: null
-
-# Set SELinux enforcing for NGINX (CentOS/Red Hat only) - you may need to open ports on your own
-nginx_selinux: false
-
-# Enable enforcing mode if true.  Permissive if false (audit only, no enforcing) globally (only works with nginx_selinux: true)
-nginx_selinux_enforcing: false
-
-# List of TCP ports to add to http_port_t type (80 and 443 have this type already)
-# nginx_selinux_tcp_ports:
-#   - 80
-#   - 443
-
-# List of UDP ports to add to http_port_t type
-# nginx_selinux_udp_ports:
-#   - 80
-#   - 443
-
-# Temporary directory to hold selinux modules
-nginx_selinux_tempdir: /tmp
-
-# Enable systemd modifications
-# ** ALL of the following variables are ignored unless this is set to true **
-nginx_service_modify: false
-
-# Remove the override file completely
-nginx_service_clean: false
-
-# Override the systemd directory
-# Default is /etc/systemd/system/nginx.service.d
-nginx_service_overridepath: /etc/systemd/system/nginx.service.d
-
-# Override the systemd filename
-# Default is override.conf
-nginx_service_overridefilename: override.conf
-
-# Set service timeout for systemd systems in seconds
-# [Service]
-# TimeoutStartSec=90
-# TimeoutStopSec=90
-# Default is to comment this out
-# nginx_service_timeoutstartsec: 90
-# nginx_service_timeoutstopsec: 90
-
-# Set the restart policy for systemd systems
-# Values = no (default), on-failure, on-abnormal, on-watchdog, on-abort, always
-# [Service]
-# Restart=on-failure
-# Default is to comment this out
-# nginx_service_restart: on-failure
-
-# Set the restart timer in seconds
-# [Service]
-# RestartSec=5s
-# Default is to comment this out
-# nginx_service_restartsec: 5s
-
-# Enable a custom systemd override file
-# ** This could break the service **
-# Setting this to true disables custom values above
-nginx_service_custom: false
-
-# Filename and path for systemd override file
-# Setting this will overwrite existing override file
-nginx_service_custom_file: "{{ role_path }}/files/services/nginx.override.conf"
-
-# Choose to install BSD packages or ports.
-# Options are true for packages or false for ports.
-# Default is true.
-nginx_bsd_install_packages: true
-
-# Choose to update BSD ports collection.
-# Options are true for update or false for do not update.
-# Default is true.
-nginx_bsd_update_ports: true
-
-# Choose to install packages built from BSD ports collection if
-# available.
-# Options are true for use packages or false for do not use packages.
-# Default is true.
-nginx_bsd_portinstall_use_packages: true
 
 # Create custom logrotate config
 nginx_logrotate_conf_enable: false
