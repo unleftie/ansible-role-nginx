@@ -156,6 +156,14 @@
         mode: 0700
 
     - name: Unpack PCRE dependency
+      ansible.builtin.unarchive:
+        copy: false
+        src: "{{ pcre_source['dest'] }}"
+        dest: /tmp/pcre-{{ pcre_version }}/
+        mode: 0700
+        extra_opts: [--strip-components=1]
+
+    - name: Unpack PCRE dependency
       unarchive:
         copy: false
         src: "{{ pcre_source['dest'] }}"
@@ -225,6 +233,14 @@
         path: /tmp/zlib-{{ zlib_version }}
         state: directory
         mode: 0700
+
+    - name: Unpack ZLib dependency
+      ansible.builtin.unarchive:
+        copy: false
+        src: "{{ zlib_source['dest'] }}"
+        dest: /tmp/zlib-{{ zlib_version }}
+        mode: 0700
+        extra_opts: [--strip-components=1]
 
     - name: Unpack ZLib dependency
       unarchive:
@@ -298,6 +314,14 @@
         mode: 0700
 
     - name: Unpack OpenSSL dependency
+      ansible.builtin.unarchive:
+        copy: false
+        src: "{{ openssl_source['dest'] }}"
+        dest: /tmp/openssl-{{ openssl_version }}
+        mode: 0700
+        extra_opts: [--strip-components=1]
+
+    - name: Unpack OpenSSL dependency
       unarchive:
         copy: false
         src: "{{ openssl_source['dest'] }}"
@@ -342,6 +366,14 @@
 - name: Add NGINX group
   ansible.builtin.group:
     name: nginx
+
+- name: Add NGINX user
+  ansible.builtin.user:
+    name: nginx
+    group: nginx
+    comment: nginx user
+    home: /var/cache/nginx
+    shell: /sbin/nologin
 
 - name: Add NGINX user
   user:
