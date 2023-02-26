@@ -1,4 +1,10 @@
 ---
+- name: Ensure /etc/ssl/private directory exists.
+  file:
+    path: /etc/ssl/private
+    state: directory
+    mode: 0755
+
 - name: Check if selfsigned cert file exists
   stat:
     path: "{{ nginx_selfsigned_cert_path }}"
