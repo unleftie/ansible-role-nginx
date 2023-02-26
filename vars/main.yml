@@ -1,137 +1,6 @@
 ---
-# Enable NGINX and NGINX modules.
-# Variables for these options can be found below.
-# Default is true.
-nginx_enable: true
-
-# Print NGINX configuration file to terminal after executing playbook.
-nginx_debug_output: false
-
-# Options are 'opensource' or 'plus'.
-nginx_type: "opensource"
-
-# (Optional) Specify which version of NGINX you want to install.
-# Default is to install the latest release.
-# nginx_version: "=19-1~bionic"
-# For NGINX Plus and modules you'll need a wilcard like below (which installs plus-20 and modules)
-# : "-20*"
-
-# Start NGINX service.
-nginx_start: true
-
-nginx_dhparam_path: "/etc/ssl/certs/dhparam.pem"
-
-# selfsigned
-nginx_selfsigned_key_path: "/etc/ssl/private/nginx-selfsigned.key"
-nginx_selfsigned_cert_path: "/etc/ssl/certs/nginx-selfsigned-cert.pem"
-
-# Specify repository origin for NGINX Open Source.
-# Options are 'nginx_repository', 'source' or 'os_repository'.
-# Only works if 'nginx_type' is set to 'opensource'.
-# Default is nginx_repository.
-nginx_install_from: nginx_repository
-
-# Specify source install options for NGINX Open Source.
-# Options represent whether to install from source also or to install from packages (default).
-# These only apply if 'nginx_install_from' is set to 'source'.
-# For the tools, true means we will install from a package and false means install from source.
-# 'nginx_install_source_build_tools' will install compiler and build tools from packages.
-# If false, you need to have these present.
-nginx_install_source_build_tools: true
-nginx_install_source_pcre: false
-nginx_install_source_openssl: true
-nginx_install_source_zlib: false
-
-# Specify source install module for NGINX Open Source.
-# You can select any of the static modules listed on http://nginx.org/en/docs/configure.html.
-# Format is '--with-*' where '*' should be used as static module name in the list below. (see an example below).
-# Default is 'http_ssl_module'. (DO NOT remove it if you need SSL support).
-nginx_static_modules: ["http_ssl_module"]
-# nginx_static_modules: ['http_v2_module']  # Example for '--with-http_v2_module'
-
-# (Optional) Choose where to fetch the NGINX signing key from.
-# Default is the official NGINX signing key host.
-# nginx_signing_key: http://nginx.org/keys/nginx_signing.key
-
-# (Optional) Specify repository for NGINX Open Source or NGINX Plus.
-# Only works if 'install_from' is set to 'nginx_repository' when installing NGINX Open Source.
-# Defaults are the official NGINX repositories.
-# nginx_repository: deb [arch=amd64] https://nginx.org/packages/mainline/debian/ buster nginx
-
-# Specify which branch of NGINX Open Source you want to install.
-# Options are 'mainline' or 'stable'.
-# Only works if 'install_from' is set to 'nginx_repository' or 'source'.
-# Default is mainline.
-nginx_branch: "mainline"
-
-# Set SELinux enforcing for NGINX (CentOS/Red Hat only) - you may need to open ports on your own
-nginx_selinux: false
-
-# Enable enforcing mode if true.  Permissive if false (audit only, no enforcing) globally (only works with nginx_selinux: true)
-nginx_selinux_enforcing: true
-
-# List of TCP ports to add to http_port_t type (80 and 443 have this type already)
-# nginx_selinux_tcp_ports:
-#   - 80
-#   - 443
-
-# List of UDP ports to add to http_port_t type
-# nginx_selinux_udp_ports:
-#   - 80
-#   - 443
-
-# Temporary directory to hold selinux modules
-nginx_selinux_tempdir: /tmp
-
-# Location of your NGINX Plus license in your local machine.
-# Default is the files folder within the NGINX Ansible role.
-nginx_license:
-  certificate: license/nginx-repo.crt
-  key: license/nginx-repo.key
-
-# Set up NGINX Plus license before installation.
-# Default is true.
-nginx_setup_license: false
-
-# Remove NGINX Plus license and repository after installation for security purposes.
-# Default is true.
-nginx_remove_license: false
-
-# Specify whether or not you want this role to install the EPEL package when installing certain NGINX Plus modules.
-# Using 'true' will install EPEL.
-# Using 'false' will not install EPEL.
-# Default is true.
-nginx_install_epel_release: true
-
-# Install NGINX Dynamic Modules.
-# You can select any of the dynamic modules listed below. Beware of NGINX Plus only dynamic modules (these are marked).
-# Format is list with either the dynamic module name or a dictionary (see njs for an example).
-# When using a dictionary, the default value for state is present, and for version it's nginx_version if specified.
-# Default is an empty list (no dynamic modules are installed).
-nginx_modules:
-  - name: geoip
-    state: present
-  # - auth-spnego  # NGINX Plus
-  # - brotli  # NGINX Plus
-  # - cookie-flag  # NGINX Plus
-  # - encrypted-session  # NGINX Plus
-  # - geoip2  # NGINX Plus
-  # - headers-more  # NGINX Plus
-  # - image-filter
-  # - lua  # NGINX Plus
-  # - name: njs  # Required
-  #   state: present  # Optional
-  #   version: =1.19.4+0.4.4-1~bionic  # Optional
-  # - opentracing  # NGINX Plus
-  # - passenger  # NGINX Plus
-  # - perl  # NGINX Plus
-  # - prometheus  # NGINX Plus
-  # - rtmp
-  # - subs-filter  # NGINX Plus
-  # - waf  # NGINX Plus
-  # - xslt
-
-nginx_setup_vars: ["install", "uninstall", "upgrade"]
+# Set the values allowed for various variables
+nginx_setup_vars: [install, uninstall, upgrade]
 
 nginx_install_from_vars: [nginx_repository, source, os_repository]
 
@@ -246,10 +115,8 @@ nginx_default_signing_key_pgp: https://nginx.org/keys/nginx_signing.key
 nginx_default_signing_key_rsa_pub: https://nginx.org/keys/nginx_signing.rsa.pub
 
 # Default NGINX Open Source repositories
-nginx_default_repository_alpine:
-  "@nginx http://nginx.org/packages/{{ (nginx_branch == 'mainline') | ternary('mainline/', '') }}\
-  alpine/v{{ ansible_facts['distribution_version'] | regex_search('^[0-9]+\\.[0-9]+') }}/main"
-nginx_default_repository_amazon: "https://nginx.org/packages/{{ (nginx_branch == 'mainline') | ternary('mainline/', '') }}/amzn2/$releasever/$basearch"
+nginx_default_repository_alpine: "@nginx http://nginx.org/packages/{{ (nginx_branch == 'mainline') | ternary('mainline/', '') }}alpine/v{{ ansible_facts['distribution_version'] | regex_search('^[0-9]+\\.[0-9]+') }}/main"
+nginx_default_repository_amazon: https://nginx.org/packages/{{ (nginx_branch == 'mainline') | ternary('mainline/', '') }}/amzn2/$releasever/$basearch
 nginx_default_repository_debian:
   - deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] https://nginx.org/packages/{{ (nginx_branch == 'mainline') | ternary('mainline/', '') }}{{ ansible_facts['distribution'] | lower }}/ {{ ansible_facts['distribution_release'] }} nginx
   - deb-src [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] https://nginx.org/packages/{{ (nginx_branch == 'mainline') | ternary('mainline/', '') }}{{ ansible_facts['distribution'] | lower }}/ {{ ansible_facts['distribution_release'] }} nginx
@@ -328,19 +195,10 @@ nginx_plus_modules_list:
     xslt,
   ]
 
-# Create custom logrotate config
-nginx_logrotate_conf_enable: false
-nginx_logrotate_conf:
-  paths:
-    - "/var/log/nginx/*.log"
-  options:
-    - daily
-    - missingok
-    - rotate 62
-    - compress
-    - delaycompress
-    - notifempty
-    - create 0644 www-data adm # Changes nginx logs permissions
-    - sharedscripts
+nginx_dhparam_path: "/etc/ssl/certs/dhparam.pem"
+
+# selfsigned
+nginx_selfsigned_key_path: "/etc/ssl/private/nginx-selfsigned.key"
+nginx_selfsigned_cert_path: "/etc/ssl/certs/nginx-selfsigned-cert.pem"
 
 nginx_cloudflare_ca_cert_url: "https://developers.cloudflare.com/ssl/static/authenticated_origin_pull_ca.pem"
