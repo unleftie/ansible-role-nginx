@@ -2,31 +2,25 @@
 - name: (Alpine Linux) Install logrotate
   community.general.apk:
     name: logrotate
-  when: ansible_facts['os_family'] == "Alpine"
+  when: ansible_facts['os_family'] == 'Alpine'
 
 - name: (Debian/Ubuntu) Install logrotate
   apt:
     name: logrotate
     state: present
-  when: ansible_facts['os_family'] == "Debian"
+  when: ansible_facts['os_family'] == 'Debian'
 
 - name: (Amazon Linux/CentOS/Oracle Linux/RHEL) Install logrotate
   yum:
     name: logrotate
     state: present
-  when: ansible_facts['os_family'] == "RedHat"
+  when: ansible_facts['os_family'] == 'RedHat'
 
-- name: (SLES) Set up logrotate
-  block:
-    - name: (SLES) Configure logrotate repository
-      community.general.zypper_repository:
-        repo: https://download.opensuse.org/repositories/openSUSE:Leap:42.1/standard/openSUSE:Leap:42.1.repo
-
-    - name: (SLES) Install Logrotate
-      community.general.zypper:
-        name: logrotate
-        state: present
-  when: ansible_facts['os_family'] == "Suse"
+- name: (SLES) Install Logrotate
+  community.general.zypper:
+    name: logrotate
+    state: present
+  when: ansible_facts['os_family'] == 'Suse'
 
 - name: Create logrotate config
   template:

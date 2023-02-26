@@ -10,7 +10,7 @@
     enabled: true
   when:
     - nginx_start | bool
-    - nginx_state != "absent"
+    - nginx_state != 'absent'
     - not ansible_check_mode | bool
   listen: run_nginx
 
@@ -28,7 +28,7 @@
 - name: print_nginx_error
   debug:
     var: config_check.stderr_lines
-  failed_when: config_check.rc != 0
+  failed_when: config_check['rc'] != 0
   when:
     - config_check.stderr_lines is defined
     - config_check.stderr_lines != []
