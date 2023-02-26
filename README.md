@@ -19,11 +19,14 @@
 
 ## Role dependencies
 
-- iptables
+- iptables `required`
+- iptables persistent `optional`
 
 ## Local Testing
 
 ```sh
+git clone https://github.com/unleftie/ansible-role-nginx.git
+cd ansible-role-nginx/
 molecule test
 ```
 
