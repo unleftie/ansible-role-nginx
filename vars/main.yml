@@ -209,11 +209,12 @@ nginx_debian_dependencies:
     "python3-pyparsing",
     "python3-zope.interface",
     "python3-certbot-nginx",
+    "iptables",
   ]
 
 # Red Hat dependencies
 nginx_redhat_dependencies:
-  ["ca-certificates", "openssl", "certbot", "python3-certbot-nginx"]
+  ["ca-certificates", "openssl", "certbot", "python3-certbot-nginx", "iptables"]
 
 # SLES dependencies
 nginx_sles_dependencies: ["ca-certificates"]
