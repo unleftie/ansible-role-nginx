@@ -58,3 +58,5 @@ jobs:
           PY_COLORS: "1"
           ANSIBLE_FORCE_COLOR: "1"
           MOLECULE_DISTRO: ${{ matrix.distro }}
+          GHA_TOKEN: ${{ secrets.GHA_TOKEN }}
+          MOLECULE_DOCKER_COMMAND: ${{ secrets.MOLECULE_DOCKER_COMMAND }}
