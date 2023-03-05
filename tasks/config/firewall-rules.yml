@@ -1,4 +1,8 @@
 ---
+- name: Check if iptables is installed
+  package_facts:
+    manager: auto
+
 - name: Allow nginx from external
   iptables:
     chain: INPUT
@@ -12,3 +16,4 @@
     jump: ACCEPT
     comment: "nginx from external"
   notify: save_iptables_rules
+  when: "'iptables' in ansible_facts.packages"
