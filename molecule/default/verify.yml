@@ -47,7 +47,6 @@
       register: _download_file
       until: _download_file is succeeded
       retries: 5
-      debugger: always
 
     - name: Copy Goss tests to remote
       template:
