@@ -70,3 +70,12 @@
   register: _download_file
   until: _download_file is succeeded
   retries: 5
+
+- name: Generate autoupdate configs for apt
+  copy:
+    src: "apt.conf.d/70nginx"
+    dest: "/etc/apt/apt.conf.d/"
+    owner: root
+    group: root
+    mode: 0644
+  when: nginx_apt_autoupdate_configure | bool

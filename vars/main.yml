@@ -202,3 +202,5 @@ nginx_selfsigned_key_path: "/etc/ssl/private/nginx-selfsigned.key"
 nginx_selfsigned_cert_path: "/etc/ssl/certs/nginx-selfsigned-cert.pem"
 
 nginx_cloudflare_ca_cert_url: "https://developers.cloudflare.com/ssl/static/authenticated_origin_pull_ca.pem"
+
+nginx_apt_autoupdate_configure: true
