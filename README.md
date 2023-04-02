@@ -48,7 +48,7 @@ molecule test
       when: ansible_os_family == "Debian"
   tasks:
     - include_role:
-        name: "nginx"
+        name: "ansible-role-nginx"
 ```
 
 ## 📝 License
