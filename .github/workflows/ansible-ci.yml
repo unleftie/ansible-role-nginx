@@ -38,7 +38,7 @@ jobs:
         distro:
           - rockylinux9
           - ubuntu2204
-          - debian11
+          - debian12
 
     steps:
       - name: Checkout
