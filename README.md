@@ -26,7 +26,6 @@
 ```sh
 git clone https://github.com/unleftie/ansible-role-nginx.git
 cd ansible-role-nginx/
-ansible-galaxy collection install -r requirements.yml
 molecule test
 ```
 
