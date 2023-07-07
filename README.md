@@ -21,6 +21,12 @@
 - iptables `required`
 - iptables persistent `optional`
 
+## Repository secrets
+
+| Variable  | Description                                            | Value  |
+| --------- | ------------------------------------------------------ | ------ |
+| GHA_TOKEN | Github Token with public repositories read-only access | string |
+
 ## Local Testing
 
 ```sh
