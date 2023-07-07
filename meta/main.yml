@@ -1,0 +1,26 @@
+---
+dependencies: []
+
+galaxy_info:
+  role_name: nginx
+  author: unleftie
+  description: Role for nginx setup
+  company: ""
+  license: "license (MIT)"
+  min_ansible_version: "2.10"
+  platforms:
+    - name: Debian
+      versions:
+        - bookworm
+    - name: Ubuntu
+      versions:
+        - jammy
+    - name: EL
+      versions:
+        - "9"
+  galaxy_tags:
+    - web
+    - system
+    - server
+    - nginx
+    - ha
