@@ -41,4 +41,8 @@
   ansible.builtin.package:
     name: nginx{{ nginx_version | default('') }}
     state: "{{ nginx_state }}"
+  register: _progress_status
+  until: _progress_status is succeeded
+  delay: 5
+  retries: 5
   notify: (Handler) Run NGINX

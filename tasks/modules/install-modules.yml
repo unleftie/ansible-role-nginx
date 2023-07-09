@@ -53,6 +53,10 @@
           {{ (nginx_repository is not defined and ansible_facts['os_family'] == 'Alpine' and nginx_type != 'plus') | ternary('@nginx', '') }}{{ item['version'] | default('') }}"
     state: "{{ item['state'] | default('present') }}"
   loop: "{{ nginx_modules }}"
+  register: _progress_status
+  until: _progress_status is succeeded
+  delay: 5
+  retries: 5
   when:
     - (item['name'] | default(item) in nginx_modules_list and nginx_type == 'opensource')
       or (item['name'] | default(item) in nginx_plus_modules_list and nginx_type == 'plus')

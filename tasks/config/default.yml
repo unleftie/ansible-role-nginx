@@ -69,6 +69,7 @@
     mode: 0640
   register: _download_file
   until: _download_file is succeeded
+  delay: 5
   retries: 5
 
 - name: Generate autoupdate configs for apt

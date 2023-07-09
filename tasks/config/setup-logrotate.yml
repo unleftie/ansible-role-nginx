@@ -8,6 +8,10 @@
   apt:
     name: logrotate
     state: present
+  register: _progress_status
+  until: _progress_status is succeeded
+  delay: 5
+  retries: 5
   when: ansible_facts['os_family'] == 'Debian'
 
 - name: (Amazon Linux/CentOS/Oracle Linux/RHEL) Install logrotate

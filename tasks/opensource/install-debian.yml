@@ -28,5 +28,9 @@
     state: "{{ nginx_state }}"
     update_cache: true
     allow_downgrade: "{{ omit if ansible_version['full'] is version('2.12', '<') else true }}"
+  register: _progress_status
+  until: _progress_status is succeeded
+  delay: 5
+  retries: 5
   ignore_errors: "{{ ansible_check_mode }}"
   notify: run_nginx
