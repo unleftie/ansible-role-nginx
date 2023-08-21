@@ -11,6 +11,7 @@ user:
       or:
         - "/bin/false"
         - "/sbin/nologin"
+        - "/usr/sbin/nologin"
 group:
   nginx:
     exists: true
