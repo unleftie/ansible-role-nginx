@@ -1,5 +1,5 @@
 #! /bin/bash
-# version: 1.3
+# version: 1.4
 
 # nginx 1.19.4+ required
 # openssl 1.1.1+ required
@@ -73,6 +73,22 @@ function confirm() {
         '') [[ $enter_return ]] && return "$enter_return" ;;
         esac
     done
+}
+
+function check_dns() {
+    local DNS_RECORD_HOST="$1"
+    local EXTERNAL_IP=$(curl -s ident.me)
+    local DNS_RECORD_IP=$(dig +short "$DNS_RECORD_HOST")
+
+    if [[ "$DNS_RECORD_IP" =~ ^(([1-9]?[0-9]|1[0-9][0-9]|2([0-4][0-9]|5[0-5]))\.){3}([1-9]?[0-9]|1[0-9][0-9]|2([0-4][0-9]|5[0-5]))$ ]]; then
+        if [ "$EXTERNAL_IP" = "$DNS_RECORD_IP" ]; then
+            print_success "DNS record $DNS_RECORD_HOST is pointing to $DNS_RECORD_IP."
+        else
+            print_error "DNS record $DNS_RECORD_HOST is not pointing to $EXTERNAL_IP. It currently resolves to $DNS_RECORD_IP."
+        fi
+    else
+        print_error "Cannot resolve DNS record $DNS_RECORD_HOST"
+    fi
 }
 
 function generate_general_config() {
@@ -239,8 +255,11 @@ if [ ! -r "$PROXY_CONFIG_PATH" ]; then
 fi
 
 if [[ "$EXTRA_HOSTNAME" == "" ]]; then
+    check_dns "$DEFAULT_HOSTNAME"
     NGINX_HOSTNAME="$DEFAULT_HOSTNAME"
 else
+    check_dns "$DEFAULT_HOSTNAME"
+    check_dns "$EXTRA_HOSTNAME"
     NGINX_HOSTNAME="$DEFAULT_HOSTNAME $EXTRA_HOSTNAME"
 fi
 
