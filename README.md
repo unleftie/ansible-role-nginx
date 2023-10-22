@@ -5,11 +5,9 @@
 
 ## Compatibility
 
-| Platform   | Version |
-| ---------- | ------- |
-| debian     | 12      |
-| el (rocky) | 9       |
-| ubuntu     | 22.04   |
+| Platform | Version |
+| -------- | ------- |
+| debian   | 12      |
 
 ## Dependencies
 
@@ -21,12 +19,6 @@
 
 - iptables `required`
 - iptables persistent `optional`
-
-## Repository secrets
-
-| Variable  | Description                                            | Value  |
-| --------- | ------------------------------------------------------ | ------ |
-| GHA_TOKEN | Github Token with public repositories read-only access | string |
 
 ## Local Testing
 
