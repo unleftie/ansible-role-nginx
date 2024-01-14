@@ -3,7 +3,7 @@ dependencies: []
 
 galaxy_info:
   role_name: nginx
-  author: unleftie
+  author: denysrondaliev
   description: Role for nginx setup
   company: ""
   license: "license (MIT)"
