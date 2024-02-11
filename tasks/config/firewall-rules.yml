@@ -5,9 +5,9 @@
 
 - name: Allow nginx from external
   iptables:
+    ip_version: "{{ item }}"
     chain: INPUT
     protocol: tcp
-    source: "0.0.0.0/0"
     destination_ports:
       - "80"
       - "443"
@@ -15,5 +15,6 @@
     ctstate: NEW
     jump: ACCEPT
     comment: "nginx from external"
+  with_items: ["ipv4", "ipv6"]
   notify: save_iptables_rules
   when: "'iptables' in ansible_facts.packages"
