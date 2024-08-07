@@ -5,7 +5,7 @@ on:
       runKics:
         description: Run KICS scan
         type: boolean
-        default: false
+        default: true
         required: false
       runLint:
         description: Run Ansible Lint
@@ -35,6 +35,7 @@ jobs:
     name: Checkmarx KICS
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    needs: [init]
     if: |
       inputs.runKics == true ||
       github.event_name == 'push' ||
@@ -73,6 +74,7 @@ jobs:
     name: Ansible Lint
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    needs: [init]
     if: |
       inputs.runLint == true ||
       github.event_name == 'push' ||
@@ -94,11 +96,13 @@ jobs:
     name: Ansible Molecule
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    needs: [init]
     if: |
       inputs.runMolecule == true ||
       github.event_name == 'push' ||
       github.event_name == 'pull_request'
     strategy:
+      fail-fast: false
       matrix:
         distro:
           - debian12
@@ -127,7 +131,7 @@ jobs:
       inputs.publishRelease == true ||
       github.event_name == 'push' ||
       github.event_name == 'pull_request'
-    needs: [scan]
+    needs: [scan, lint, molecule]
     permissions:
       packages: write
       contents: write
