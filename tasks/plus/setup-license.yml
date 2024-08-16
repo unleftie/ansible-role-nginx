@@ -14,7 +14,7 @@
       ansible.builtin.file:
         path: /etc/apk
         state: directory
-        mode: 0755
+        mode: "0755"
 
     - name: (Alpine Linux) Copy NGINX Plus certificate
       ansible.builtin.copy:
@@ -55,7 +55,7 @@
       ansible.builtin.file:
         path: /etc/ssl/nginx
         state: directory
-        mode: 0755
+        mode: "0755"
 
     - name: (Debian/Red Hat/SLES OSs) Copy NGINX Plus certificate and license key
       ansible.builtin.copy:

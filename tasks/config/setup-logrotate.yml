@@ -30,5 +30,5 @@
   template:
     src: logrotate/nginx.j2
     dest: /etc/logrotate.d/nginx
-    mode: 0644
+    mode: "0644"
   notify: logrotate

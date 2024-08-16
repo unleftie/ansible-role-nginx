@@ -422,7 +422,7 @@
         copy: false
         src: "{{ nginx_source.dest }}"
         dest: /tmp
-        mode: 0755
+        mode: "0755"
 
     - name: Set static modules
       set_fact:
@@ -470,7 +470,7 @@
             dest: "{{ (ansible_facts['os_family'] == 'Suse') | ternary('usr/lib/systemd/system/nginx.service', '/lib/systemd/system/nginx.service') }}"
             owner: root
             group: root
-            mode: 0644
+            mode: "0644"
 
         - name: Enable systemd NGINX service file
           ansible.builtin.systemd:
@@ -489,7 +489,7 @@
             dest: /etc/init.d/nginx
             owner: root
             group: root
-            mode: 0755
+            mode: "0755"
 
         - name: Upload Upstart NGINX service conf file
           ansible.builtin.copy:
@@ -497,7 +497,7 @@
             dest: /etc/init/nginx.conf
             owner: root
             group: root
-            mode: 0644
+            mode: "0644"
 
         - name: Enable Upstart NGINX service reload # noqa no-changed-when
           ansible.builtin.command: initctl reload-configuration
@@ -511,7 +511,7 @@
         dest: /etc/init.d/nginx
         owner: root
         group: root
-        mode: 0755
+        mode: "0755"
       when: ansible_facts['service_mgr'] == 'sysvinit'
       notify: (Handler) Run NGINX
 
@@ -525,7 +525,7 @@
             dest: /run/openrc/softlevel
             force: false
             owner: root
-            mode: 0644
+            mode: "0644"
 
         - name: Upload OpenRC NGINX service file
           ansible.builtin.copy:
@@ -533,7 +533,7 @@
             dest: /etc/init.d/nginx
             owner: root
             group: root
-            mode: 0755
+            mode: "0755"
 
         - name: Enable OpenRC NGINX service # noqa no-changed-when
           ansible.builtin.command: rc-update add nginx default

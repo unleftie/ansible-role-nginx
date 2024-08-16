@@ -5,7 +5,7 @@
     owner: root
     group: root
     state: directory
-    mode: 0755
+    mode: "0755"
   with_items:
     - "/etc/nginx/conf.d"
     - "/etc/nginx/snippets"
@@ -35,7 +35,7 @@
     dest: "/etc/nginx/nginx.conf"
     owner: root
     group: root
-    mode: 0644
+    mode: "0644"
   notify: reload_nginx
 
 - name: Generate snippets
@@ -44,7 +44,7 @@
     dest: "/etc/nginx/snippets/"
     owner: root
     group: root
-    mode: 0644
+    mode: "0644"
   with_fileglob:
     - "templates/snippets/*"
   notify: reload_nginx
@@ -55,7 +55,7 @@
     dest: "/etc/nginx/conf.d/"
     owner: root
     group: root
-    mode: 0644
+    mode: "0644"
   with_fileglob:
     - "templates/configs/*"
   notify: reload_nginx
@@ -66,7 +66,7 @@
     dest: "/etc/ssl/certs/cloudflare.crt"
     owner: root
     group: root
-    mode: 0640
+    mode: "0640"
   register: _download_file
   until: _download_file is succeeded
   delay: 5
@@ -78,5 +78,5 @@
     dest: "/etc/apt/apt.conf.d/"
     owner: root
     group: root
-    mode: 0644
+    mode: "0644"
   when: nginx_apt_autoupdate_configure | bool

@@ -3,7 +3,7 @@
   file:
     path: /etc/ssl/private
     state: directory
-    mode: 0755
+    mode: "0755"
 
 - name: Check if selfsigned cert file exists
   stat:
