@@ -16,5 +16,9 @@
     jump: ACCEPT
     comment: "nginx from external"
   with_items: ["ipv4", "ipv6"]
-  notify: save_iptables_rules
+  notify:
+    - save_iptables_rules_redhat_ipv4
+    - save_iptables_rules_debian_ipv4
+    - save_iptables_rules_redhat_ipv6
+    - save_iptables_rules_debian_ipv6
   when: "'iptables' in ansible_facts.packages"
