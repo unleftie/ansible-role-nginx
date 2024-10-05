@@ -77,7 +77,7 @@ function confirm() {
 
 function check_dns() {
     local DNS_RECORD_HOST="$1"
-    local EXTERNAL_IP=$(curl -s ident.me)
+    local EXTERNAL_IP=$(curl -4 -s ident.me)
     local DNS_RECORD_IP=$(dig +short "$DNS_RECORD_HOST")
 
     if [[ "$DNS_RECORD_IP" =~ ^(([1-9]?[0-9]|1[0-9][0-9]|2([0-4][0-9]|5[0-5]))\.){3}([1-9]?[0-9]|1[0-9][0-9]|2([0-4][0-9]|5[0-5]))$ ]]; then
