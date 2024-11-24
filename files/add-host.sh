@@ -1,11 +1,13 @@
 #! /bin/bash
-# version: 1.4
+# version: 1.5.0
 
 # nginx 1.19.4+ required
 # openssl 1.1.1+ required
-# apt install openssl python3-certbot-nginx python3-certbot python3-acme python3-zope.interface -y
 
-# make sure that DNS entry points to your instance
+# make sure that DNS record is pointing to the server
+
+# for manual installation without ansible you need to install the following packages:
+# openssl python3-certbot-nginx python3-certbot python3-acme python3-zope.interface
 
 # examples (interractive):
 # ./add-host.sh
@@ -19,11 +21,11 @@
 set -o pipefail
 
 while getopts "h:e:t:" option; do
-    case "${option}" in
-    h) DEFAULT_HOSTNAME=${OPTARG} ;;
-    e) EXTRA_HOSTNAME=${OPTARG} ;;
-    t) TARGET=${OPTARG} ;;
-    esac
+  case "${option}" in
+  h) DEFAULT_HOSTNAME=${OPTARG} ;;
+  e) EXTRA_HOSTNAME=${OPTARG} ;;
+  t) TARGET=${OPTARG} ;;
+  esac
 done
 
 CONF_DIR_PATH="/etc/nginx/conf.d"
@@ -36,65 +38,65 @@ SECURITY_CONFIG_PATH="$SNIPPETS_DIR_PATH/security.conf"
 PROXY_CONFIG_PATH="$SNIPPETS_DIR_PATH/proxy.conf"
 
 function print_success() {
-    printf '%s# %s%s\n' "$(printf '\033[32m')" "$*" "$(printf '\033[m')" >&2
+  printf '%s# %s%s\n' "$(printf '\033[32m')" "$*" "$(printf '\033[m')" >&2
 }
 
 function print_warning() {
-    printf '%sWARNING: %s%s\n' "$(printf '\033[31m')" "$*" "$(printf '\033[m')" >&2
+  printf '%sWARNING: %s%s\n' "$(printf '\033[31m')" "$*" "$(printf '\033[m')" >&2
 }
 
 function print_error() {
-    printf '%sERROR: %s%s\n' "$(printf '\033[31m')" "$*" "$(printf '\033[m')" >&2
-    exit 1
+  printf '%sERROR: %s%s\n' "$(printf '\033[31m')" "$*" "$(printf '\033[m')" >&2
+  exit 1
 }
 
 function get_input() {
-    [[ $ZSH_VERSION ]] && read "$2"\?"$1"
-    [[ $BASH_VERSION ]] && read -p "$1" "$2"
+  [[ $ZSH_VERSION ]] && read "$2"\?"$1"
+  [[ $BASH_VERSION ]] && read -p "$1" "$2"
 }
 
 function get_keypress() {
-    local REPLY IFS=
-    printf >/dev/tty '%s' "$*"
-    [[ $ZSH_VERSION ]] && read -rk1
-    [[ $BASH_VERSION ]] && read </dev/tty -rn1
-    printf '%s' "$REPLY"
+  local REPLY IFS=
+  printf >/dev/tty '%s' "$*"
+  [[ $ZSH_VERSION ]] && read -rk1
+  [[ $BASH_VERSION ]] && read </dev/tty -rn1
+  printf '%s' "$REPLY"
 }
 
 function confirm() {
-    local prompt="${1:-Are you sure?} [y/n] "
-    local enter_return=$2
-    local REPLY
-    while REPLY=$(get_keypress "$prompt"); do
-        [[ $REPLY ]] && printf '\n'
-        case "$REPLY" in
-        Y | y) return 0 ;;
-        N | n) return 1 ;;
-        '') [[ $enter_return ]] && return "$enter_return" ;;
-        esac
-    done
+  local prompt="${1:-Are you sure?} [y/n] "
+  local enter_return=$2
+  local REPLY
+  while REPLY=$(get_keypress "$prompt"); do
+    [[ $REPLY ]] && printf '\n'
+    case "$REPLY" in
+    Y | y) return 0 ;;
+    N | n) return 1 ;;
+    '') [[ $enter_return ]] && return "$enter_return" ;;
+    esac
+  done
 }
 
 function check_dns() {
-    local DNS_RECORD_HOST="$1"
-    local EXTERNAL_IP=$(curl -4 -s ident.me)
-    local DNS_RECORD_IP=$(dig +short "$DNS_RECORD_HOST")
+  local DNS_RECORD_HOST="$1"
+  local EXTERNAL_IP=$(curl -4 -s ident.me)
+  local DNS_RECORD_IP=$(dig +short "$DNS_RECORD_HOST")
 
-    if [[ "$DNS_RECORD_IP" =~ ^(([1-9]?[0-9]|1[0-9][0-9]|2([0-4][0-9]|5[0-5]))\.){3}([1-9]?[0-9]|1[0-9][0-9]|2([0-4][0-9]|5[0-5]))$ ]]; then
-        if [ "$EXTERNAL_IP" = "$DNS_RECORD_IP" ]; then
-            print_success "DNS record $DNS_RECORD_HOST is pointing to $DNS_RECORD_IP."
-        else
-            print_error "DNS record $DNS_RECORD_HOST is not pointing to $EXTERNAL_IP. It currently resolves to $DNS_RECORD_IP."
-        fi
+  if [[ "$DNS_RECORD_IP" =~ ^(([1-9]?[0-9]|1[0-9][0-9]|2([0-4][0-9]|5[0-5]))\.){3}([1-9]?[0-9]|1[0-9][0-9]|2([0-4][0-9]|5[0-5]))$ ]]; then
+    if [ "$EXTERNAL_IP" = "$DNS_RECORD_IP" ]; then
+      print_success "DNS record $DNS_RECORD_HOST is pointing to $DNS_RECORD_IP."
     else
-        print_error "Cannot resolve DNS record $DNS_RECORD_HOST"
+      print_error "DNS record $DNS_RECORD_HOST is not pointing to $EXTERNAL_IP. It currently resolves to $DNS_RECORD_IP."
     fi
+  else
+    print_error "Cannot resolve DNS record $DNS_RECORD_HOST"
+  fi
 }
 
 function generate_general_config() {
-    mkdir -p $SNIPPETS_DIR_PATH
+  mkdir -p $SNIPPETS_DIR_PATH
 
-    echo '# favicon.ico
+  echo '# favicon.ico
     location = /favicon.ico {
         log_not_found off;
         access_log off;
@@ -116,16 +118,16 @@ function generate_general_config() {
 }
 
 function generate_https_config() {
-    local CERTS_DIR_PATH="/etc/ssl/certs"
-    local DH_PARAM_PATH="$CERTS_DIR_PATH/dhparam.pem"
-    local DH_PARAM_SIZE="2048"
+  local CERTS_DIR_PATH="/etc/ssl/certs"
+  local DH_PARAM_PATH="$CERTS_DIR_PATH/dhparam.pem"
+  local DH_PARAM_SIZE="2048"
 
-    mkdir -p $CERTS_DIR_PATH
-    mkdir -p $SNIPPETS_DIR_PATH
+  mkdir -p $CERTS_DIR_PATH
+  mkdir -p $SNIPPETS_DIR_PATH
 
-    [ ! -r "$DH_PARAM_PATH" ] && openssl dhparam -out $DH_PARAM_PATH $DH_PARAM_SIZE
+  [ ! -r "$DH_PARAM_PATH" ] && openssl dhparam -out $DH_PARAM_PATH $DH_PARAM_SIZE
 
-    echo "ssl_protocols TLSv1.3 TLSv1.2;
+  echo "ssl_protocols TLSv1.3 TLSv1.2;
     ssl_dhparam $DH_PARAM_PATH;
     ssl_prefer_server_ciphers on;
     ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384;
@@ -142,9 +144,9 @@ function generate_https_config() {
 }
 
 function generate_letsencrypt_config() {
-    mkdir -p $SNIPPETS_DIR_PATH
+  mkdir -p $SNIPPETS_DIR_PATH
 
-    echo '# ACME-challenge
+  echo '# ACME-challenge
     location ^~ /.well-known/acme-challenge/ {
     root /var/www/_letsencrypt;
     }
@@ -152,9 +154,9 @@ function generate_letsencrypt_config() {
 }
 
 function generate_security_config() {
-    mkdir -p $SNIPPETS_DIR_PATH
+  mkdir -p $SNIPPETS_DIR_PATH
 
-    echo 'proxy_hide_header X-Powered-By;
+  echo 'proxy_hide_header X-Powered-By;
     add_header X-Frame-Options "SAMEORIGIN" always;
     add_header X-XSS-Protection "1; mode=block" always;
     add_header X-Content-Type-Options "nosniff" always;
@@ -169,9 +171,9 @@ function generate_security_config() {
 }
 
 function generate_proxy_config() {
-    mkdir -p $SNIPPETS_DIR_PATH
+  mkdir -p $SNIPPETS_DIR_PATH
 
-    echo 'proxy_http_version 1.1;
+  echo 'proxy_http_version 1.1;
 
     # Cache
     proxy_cache_bypass $http_upgrade;
@@ -198,73 +200,74 @@ function generate_proxy_config() {
 }
 
 if [ ! -d "$CONF_DIR_PATH" ]; then
-    print_error "Directory for configs does not exist: $CONF_DIR_PATH"
+  print_error "Directory for configs does not exist: $CONF_DIR_PATH"
 fi
 
 if [[ "$DEFAULT_HOSTNAME" == "" ]]; then
-    get_input "Hostname: " DEFAULT_HOSTNAME
-    [ "${DEFAULT_HOSTNAME//[A-Za-z0-9._-]/}" ] && print_error "Valid characters for 'Hostname' value are 'A-Z', 'a-z', '0-9' and '._-'"
-    get_input "Extra hostname ['Enter' to skip]: " EXTRA_HOSTNAME
-    [ "${EXTRA_HOSTNAME//[A-Za-z0-9._-]/}" ] && print_error "Valid characters for 'Extra hostname' value are 'A-Z', 'a-z', '0-9', and '._-'"
-    get_input "Target ['Enter' to skip]: " TARGET
-    [ "${TARGET//[A-Za-z0-9:._-]/}" ] && print_error "Valid characters for 'Target' value are 'A-Z', 'a-z', '0-9' and '._-:'"
+  get_input "Hostname: " DEFAULT_HOSTNAME
+  [ "${DEFAULT_HOSTNAME//[A-Za-z0-9._-]/}" ] && print_error "Valid characters for 'Hostname' value are 'A-Z', 'a-z', '0-9' and '._-'"
+  get_input "Extra hostname ['Enter' to skip]: " EXTRA_HOSTNAME
+  [ "${EXTRA_HOSTNAME//[A-Za-z0-9._-]/}" ] && print_error "Valid characters for 'Extra hostname' value are 'A-Z', 'a-z', '0-9', and '._-'"
+  get_input "Target ['Enter' to skip]: " TARGET
+  [ "${TARGET//[A-Za-z0-9:._-]/}" ] && print_error "Valid characters for 'Target' value are 'A-Z', 'a-z', '0-9' and '._-:'"
 fi
 
 if [[ $DEFAULT_HOSTNAME == *"http://"* ]] || [[ $DEFAULT_HOSTNAME == *"https://"* ]]; then
-    print_error "Do not use 'http://' or 'https://' for 'Hostname' variable"
+  print_error "Do not use 'http://' or 'https://' for 'Hostname' variable"
 fi
 
 if [[ $EXTRA_HOSTNAME == *"http://"* ]] || [[ $EXTRA_HOSTNAME == *"https://"* ]]; then
-    print_error "Do not use 'http://' or 'https://' for 'Extra hostname' variable"
+  print_error "Do not use 'http://' or 'https://' for 'Extra hostname' variable"
 fi
 
 if [[ $TARGET == *"http://"* ]] || [[ $TARGET == *"https://"* ]]; then
-    print_error "Do not use 'http://' or 'https://' for 'Target' variable"
+  print_error "Do not use 'http://' or 'https://' for 'Target' variable"
 fi
 
 CONF_FILE_PATH="$CONF_DIR_PATH/$DEFAULT_HOSTNAME.conf"
 
 if [ -r "$CONF_FILE_PATH" ]; then
-    print_warning "File already exist: $CONF_FILE_PATH"
-    confirm "Whether to replace config file?" && rm -rf $CONF_FILE_PATH || print_error "exit"
+  print_warning "File already exist: $CONF_FILE_PATH"
+  confirm "Whether to replace config file?" && rm -rf $CONF_FILE_PATH || print_error "exit"
 fi
 
 if [ ! -r "$GENERAL_CONFIG_PATH" ]; then
-    print_warning "File does not exist: $GENERAL_CONFIG_PATH"
-    confirm "Whether to generate required general config file?" && generate_general_config || print_error "exit"
+  print_warning "File does not exist: $GENERAL_CONFIG_PATH"
+  confirm "Whether to generate required general config file?" && generate_general_config || print_error "exit"
 fi
 
 if [ ! -r "$HTTPS_CONFIG_PATH" ]; then
-    print_warning "File does not exist: $HTTPS_CONFIG_PATH"
-    confirm "Whether to generate required HTTPS config file?" && generate_https_config || print_error "exit"
+  print_warning "File does not exist: $HTTPS_CONFIG_PATH"
+  confirm "Whether to generate required HTTPS config file?" && generate_https_config || print_error "exit"
 fi
 
 if [ ! -r "$LETSENCRYPT_CONFIG_PATH" ]; then
-    print_warning "File does not exist: $LETSENCRYPT_CONFIG_PATH"
-    confirm "Whether to generate required letsencrypt config file?" && generate_letsencrypt_config || print_error "exit"
+  print_warning "File does not exist: $LETSENCRYPT_CONFIG_PATH"
+  confirm "Whether to generate required letsencrypt config file?" && generate_letsencrypt_config || print_error "exit"
 fi
 
 if [ ! -r "$SECURITY_CONFIG_PATH" ]; then
-    print_warning "File does not exist: $SECURITY_CONFIG_PATH"
-    confirm "Whether to generate required security config file?" && generate_security_config || print_error "exit"
+  print_warning "File does not exist: $SECURITY_CONFIG_PATH"
+  confirm "Whether to generate required security config file?" && generate_security_config || print_error "exit"
 fi
 
 if [ ! -r "$PROXY_CONFIG_PATH" ]; then
-    print_warning "File does not exist: $PROXY_CONFIG_PATH"
-    confirm "Whether to generate required proxy config file?" && generate_proxy_config || print_error "exit"
+  print_warning "File does not exist: $PROXY_CONFIG_PATH"
+  confirm "Whether to generate required proxy config file?" && generate_proxy_config || print_error "exit"
 fi
 
 if [[ "$EXTRA_HOSTNAME" == "" ]]; then
-    check_dns "$DEFAULT_HOSTNAME"
-    NGINX_HOSTNAME="$DEFAULT_HOSTNAME"
+  check_dns "$DEFAULT_HOSTNAME"
+  NGINX_HOSTNAME="$DEFAULT_HOSTNAME"
 else
-    check_dns "$DEFAULT_HOSTNAME"
-    check_dns "$EXTRA_HOSTNAME"
-    NGINX_HOSTNAME="$DEFAULT_HOSTNAME $EXTRA_HOSTNAME"
+  check_dns "$DEFAULT_HOSTNAME"
+  check_dns "$EXTRA_HOSTNAME"
+  NGINX_HOSTNAME="$DEFAULT_HOSTNAME $EXTRA_HOSTNAME"
 fi
 
 echo 'server {
     listen 80;
+    listen [::]:80;
 
     server_name NGINX_HOSTNAME;
 
@@ -277,23 +280,24 @@ echo 'server {
 sed -i "s,NGINX_HOSTNAME,$NGINX_HOSTNAME,g" $CONF_FILE_PATH
 
 if nginx -t 2>/dev/null; then
-    nginx -s reload 2>/dev/null
+  nginx -s reload 2>/dev/null
 else
-    rm -rf $CONF_FILE_PATH
-    nginx -s reload 2>/dev/null
-    print_error "Something wrong with config"
+  rm -rf $CONF_FILE_PATH
+  nginx -s reload 2>/dev/null
+  print_error "Something wrong with config"
 fi
 
 if [ -z "$EXTRA_HOSTNAME" ]; then
-    certbot --agree-tos --no-eff-email --authenticator nginx --installer null --keep-until-expiring \
-        --register-unsafely-without-email -d $DEFAULT_HOSTNAME
+  certbot --agree-tos --no-eff-email --authenticator nginx --installer null --keep-until-expiring \
+    --register-unsafely-without-email -d $DEFAULT_HOSTNAME
 else
-    certbot --agree-tos --no-eff-email --authenticator nginx --installer null --keep-until-expiring \
-        --register-unsafely-without-email -d $DEFAULT_HOSTNAME -d $EXTRA_HOSTNAME
+  certbot --agree-tos --no-eff-email --authenticator nginx --installer null --keep-until-expiring \
+    --register-unsafely-without-email -d $DEFAULT_HOSTNAME -d $EXTRA_HOSTNAME
 fi
 
 echo 'server {
     listen 80;
+    listen [::]:80;
 
     server_name NGINX_HOSTNAME;
 
@@ -305,6 +309,7 @@ echo 'server {
 
 server {
     listen 443 ssl;
+    listen [::]:443 ssl;
     http2 on;
 
     server_name NGINX_HOSTNAME;
@@ -333,22 +338,22 @@ sed -i "s,SECURITY_CONFIG_PATH,$SECURITY_CONFIG_PATH,g" $CONF_FILE_PATH
 sed -i "s,PROXY_CONFIG_PATH,$PROXY_CONFIG_PATH,g" $CONF_FILE_PATH
 
 if [ -z "$TARGET" ]; then
-    sed -i "s,proxy_pass http://TARGET,return 403,g" $CONF_FILE_PATH
+  sed -i "s,proxy_pass http://TARGET,return 403,g" $CONF_FILE_PATH
 else
-    sed -i "s,TARGET,$TARGET,g" $CONF_FILE_PATH
+  sed -i "s,TARGET,$TARGET,g" $CONF_FILE_PATH
 fi
 
 if nginx -t 2>/dev/null; then
-    nginx -s reload 2>/dev/null
+  nginx -s reload 2>/dev/null
 else
-    rm -rf $CONF_FILE_PATH
-    nginx -s reload 2>/dev/null
-    print_error "Something wrong with config"
+  rm -rf $CONF_FILE_PATH
+  nginx -s reload 2>/dev/null
+  print_error "Something wrong with config"
 fi
 
 print_success "Config file path: $CONF_FILE_PATH"
 print_success "Hostname: https://$DEFAULT_HOSTNAME"
 
 if [ ! -z "$EXTRA_HOSTNAME" ]; then
-    print_success "Hostname: https://$EXTRA_HOSTNAME"
+  print_success "Hostname: https://$EXTRA_HOSTNAME"
 fi
