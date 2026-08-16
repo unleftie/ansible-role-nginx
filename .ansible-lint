@@ -1,7 +1,6 @@
 ---
-exclude_paths:
-  - .github/
 skip_list:
+  - name[casing]
   - name[template]
   - key-order[task]
   - name[missing]
@@ -33,3 +32,4 @@ exclude_paths:
   - molecule/default/tests/*.yml
   - molecule/default/*.yml
   - .github/
+  - main.yml

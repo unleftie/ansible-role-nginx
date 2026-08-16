@@ -16,7 +16,7 @@
     -keyout {{ nginx_selfsigned_key_path }} \
     -out {{ nginx_selfsigned_cert_path }} \
     -batch"
-  ignore_errors: true
+  failed_when: false
   changed_when: false
   when: not _selfsigned_cert_file_check.stat.exists
   notify: reload_nginx
@@ -28,7 +28,7 @@
 
 - name: Generate DH parameters
   shell: "openssl dhparam -out {{ nginx_dhparam_path }} 2048"
-  ignore_errors: true
+  failed_when: false
   changed_when: false
   when: not _dhparam_file_check.stat.exists
   notify: reload_nginx
