@@ -14,20 +14,21 @@
     - not ansible_check_mode | bool
   listen: run_nginx
 
-- name: check_nginx
-  command: nginx -t
+- name: (Handler) Check NGINX
+  ansible.builtin.command:
+    cmd: nginx -t
   args:
     chdir: "{{ ((ansible_facts['system'] | lower is not search('bsd')) | ternary('/etc/nginx', '/usr/local/sbin')) }}"
   register: config_check
   ignore_errors: true
   check_mode: false
   changed_when: false
-  when: nginx_state != "absent"
-  listen: run_nginx
+  when: nginx_state != 'absent' or (nginx_install_from == 'os_repository' and nginx_skip_os_install_config_check | bool)
+  listen: (Handler) Run NGINX
 
-- name: print_nginx_error
-  debug:
-    var: config_check.stderr_lines
+- name: (Handler) Print NGINX error if syntax check fails
+  ansible.builtin.debug:
+    var: config_check['stderr_lines']
   failed_when: config_check['rc'] != 0
   when:
     - config_check['stderr_lines'] is defined
@@ -36,42 +37,32 @@
     - nginx_state != "absent"
   listen: run_nginx
 
-- name: start_amplify
-  service:
-    name: amplify-agent
-    state: started
+- name: (Handler) Start NGINX Agent
+  ansible.builtin.service:
+    name: nginx-agent
+    state: restarted
+    enabled: true
 
-- name: logrotate
-  command: logrotate -f /etc/logrotate.d/nginx
+- name: (Handler) Start logrotate
+  ansible.builtin.command: logrotate -f /etc/logrotate.d/nginx
+  register: logrotate_check
+  ignore_errors: true
+  check_mode: false
+  changed_when: false
+  listen: (Handler) Run logrotate
 
-- name: Save iptables rules [RedHat] [ipv4]
-  community.general.iptables_state:
-    ip_version: "ipv4"
-    state: saved
-    path: "/etc/sysconfig/iptables"
-  when: ansible_os_family == "RedHat"
-  listen: save_iptables_rules_redhat_ipv4
+- name: (Handler) Print logrotate error if config check fails
+  ansible.builtin.debug:
+    var: logrotate_check['stderr_lines']
+  failed_when: logrotate_check['rc'] != 0
+  when:
+    - logrotate_check['stderr_lines'] is defined
+    - logrotate_check['stderr_lines'] != []
+    - logrotate_check['rc'] != 0
+  listen: (Handler) Run logrotate
 
-- name: Save iptables rules [Debian] [ipv4]
-  community.general.iptables_state:
-    ip_version: "ipv4"
-    state: saved
-    path: "/etc/iptables/rules.v4"
-  when: ansible_os_family == "Debian"
-  listen: save_iptables_rules_debian_ipv4
-
-- name: Save iptables rules [RedHat] [ipv6]
-  community.general.iptables_state:
-    ip_version: "ipv6"
-    state: saved
-    path: "/etc/sysconfig/ip6tables"
-  when: ansible_os_family == "RedHat"
-  listen: save_iptables_rules_redhat_ipv6
-
-- name: Save iptables rules [Debian] [ipv6]
-  community.general.iptables_state:
-    ip_version: "ipv6"
-    state: saved
-    path: "/etc/iptables/rules.v6"
-  when: ansible_os_family == "Debian"
-  listen: save_iptables_rules_debian_ipv6
+- name: (Handler) Start NGINX Plus HA keepalived
+  ansible.builtin.service:
+    name: keepalived
+    state: restarted
+    enabled: true

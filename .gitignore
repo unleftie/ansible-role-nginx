@@ -1,68 +1,34 @@
-# Local .vscode directories
-**/.vscode/*
-*.code-workspace
+########################
+# Any crt/keys/license #
+########################
+*.crt
+*.key
+*.jwt
 
-# build products...
-*.py[co]
-build
-AUTHORS.TXT
-# Emacs backup and autosave files...
+##########################
+# Backup/temporary files #
+##########################
 *~
 .\#*
 \#*
-# RPM stuff...
-MANIFEST
-dist
-rpm-build
-# Eclipse/PyDev stuff...
-.project
-.pydevproject
-# PyCharm stuff...
-.idea
-#IntelliJ IDEA stuff..
-*.iml
-#VSCode stuff..
-.vscode/
-# Mac OS X stuff...
+
+##################
+# MacOS specific #
+##################
+Thumbs.db
 .DS_Store
-# manpage build stuff...
-docs/man/man1/ansible*.1
-docs/man/man1/ansible*.1.asciidoc.in
-docs/man/man3/*
-# Sublime stuff
-*.sublime-project
-*.sublime-workspace
-# docsite stuff...
-docs/docsite/_build
-docs/docsite/*.html
-docs/docsite/htmlout
-docs/docsite/rst/conf.py
-docs/docsite/rst/index.rst
-docs/docsite/rst/cli/ansible-*.rst
-docs/docsite/rst/cli/ansible.rst
-docs/docsite/rst/dev_guide/collections_galaxy_meta.rst
-docs/docsite/rst/dev_guide/testing/sanity/index.rst.new
-docs/docsite/rst/dev_guide/index.rst
-docs/docsite/rst/modules/*.rst
-docs/docsite/rst/collections/*.rst
-!docs/docsite/rst/collections/all_plugins.rst
-docs/docsite/rst/collections/*/*.rst
-docs/docsite/rst/playbooks_directives.rst
-docs/docsite/rst/plugins_by_category.rst
-docs/docsite/rst/plugins/*/*.rst
-docs/docsite/rst/reference_appendices/config.rst
-docs/docsite/rst/reference_appendices/playbooks_keywords.rst
-docs/docsite/rst_warnings
-docs/docsite/searchindex.js
-docs/docsite/_static/*.gif
-docs/docsite/_static/*.png
-docs/docsite/_static/websupport.js
-# Vim swap files
-*.swp
-*.swo
-[._]*.un~
-credentials.yml
-# test output
+.vscode
+
+########################
+# Code editor specific #
+########################
+.idea
+.vscode
+
+####################
+# Ansible specific #
+####################
+.cache
 *.retry
 *.out
 .pytest_cache/
@@ -132,7 +98,12 @@ test/units/.coverage.*
 changelogs/.plugin-cache.yaml
 .ansible-test-timeout.json
 
-*.tar.gz
-__pycache__/
+###################
+# Python specific #
+###################
+__pycache__
 
-**/.ansible/*
+########
+# Logs #
+########
+*.log

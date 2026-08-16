@@ -1,0 +1,243 @@
+{{ ansible_managed | comment }}
+
+{% if nginx_agent_log is defined and nginx_agent_log is mapping %}
+log:
+{% if nginx_agent_log['level'] is defined %}
+  level: {{ nginx_agent_log['level'] }}
+{% endif %}
+{% if nginx_agent_log['path'] is defined %}
+  path: {{ nginx_agent_log['path'] }}
+{% endif %}
+{% endif %}
+
+{% set _has_watchers = nginx_agent_watchers is defined and nginx_agent_watchers is mapping %}
+{% if _has_watchers %}
+watchers:
+{% if nginx_agent_watchers['instance_watcher'] is defined and nginx_agent_watchers['instance_watcher'] is mapping %}
+  instance_watcher:
+{% if nginx_agent_watchers['instance_watcher']['monitoring_frequency'] is defined %}
+    monitoring_frequency: {{ nginx_agent_watchers['instance_watcher']['monitoring_frequency'] }}
+{% endif %}
+{% endif %}
+{% if nginx_agent_watchers['instance_health_watcher'] is defined and nginx_agent_watchers['instance_health_watcher'] is mapping %}
+  instance_health_watcher:
+{% if nginx_agent_watchers['instance_health_watcher']['monitoring_frequency'] is defined %}
+    monitoring_frequency: {{ nginx_agent_watchers['instance_health_watcher']['monitoring_frequency'] }}
+{% endif %}
+{% endif %}
+{% if nginx_agent_watchers['file_watcher'] is defined and nginx_agent_watchers['file_watcher'] is mapping %}
+  file_watcher:
+{% if nginx_agent_watchers['file_watcher']['monitoring_frequency'] is defined %}
+    monitoring_frequency: {{ nginx_agent_watchers['file_watcher']['monitoring_frequency'] }}
+{% endif %}
+{% if nginx_agent_watchers['file_watcher']['exclude_files'] is defined
+     and nginx_agent_watchers['file_watcher']['exclude_files'] is not mapping
+     and nginx_agent_watchers['file_watcher']['exclude_files'] is not string
+     and nginx_agent_watchers['file_watcher']['exclude_files'] | length > 0 %}
+    exclude_files:
+{% for pattern in nginx_agent_watchers['file_watcher']['exclude_files'] %}
+      - {{ pattern }}
+{% endfor %}
+{% endif %}
+{% endif %}
+{% endif %}
+
+{% if nginx_agent_labels is defined and nginx_agent_labels is mapping and nginx_agent_labels | length > 0 %}
+labels:
+{% for key, value in nginx_agent_labels.items() %}
+  {{ key }}: {{ value }}
+{% endfor %}
+{% endif %}
+
+{% if nginx_agent_features is defined and nginx_agent_features is not mapping and nginx_agent_features is not string and nginx_agent_features | length > 0 %}
+features:
+{% for feature in nginx_agent_features %}
+  - {{ feature }}
+{% endfor %}
+{% endif %}
+
+{% if nginx_agent_syslog_server is defined and nginx_agent_syslog_server is mapping %}
+syslog_server:
+{% if nginx_agent_syslog_server['port'] is defined %}
+  port: {{ nginx_agent_syslog_server['port'] }}
+{% endif %}
+{% endif %}
+
+{% set _has_data_plane = nginx_agent_data_plane_config is defined and nginx_agent_data_plane_config is mapping %}
+{% if _has_data_plane %}
+data_plane_config:
+  nginx:
+{% if nginx_agent_data_plane_config['api_url'] is defined %}
+    api:
+      url: {{ nginx_agent_data_plane_config['api_url'] }}
+{% endif %}
+{% if nginx_agent_data_plane_config['reload_monitoring_period'] is defined %}
+    reload_monitoring_period: {{ nginx_agent_data_plane_config['reload_monitoring_period'] }}
+{% endif %}
+{% if nginx_agent_data_plane_config['treat_warnings_as_errors'] is defined and nginx_agent_data_plane_config['treat_warnings_as_errors'] is boolean %}
+    treat_warnings_as_errors: {{ nginx_agent_data_plane_config['treat_warnings_as_errors'] | ternary('true', 'false') }}
+{% endif %}
+{% if nginx_agent_data_plane_config['exclude_logs'] is defined
+     and nginx_agent_data_plane_config['exclude_logs'] is not mapping
+     and nginx_agent_data_plane_config['exclude_logs'] is not string
+     and nginx_agent_data_plane_config['exclude_logs'] | length > 0 %}
+    exclude_logs:
+{% for log_path in nginx_agent_data_plane_config['exclude_logs'] %}
+      - {{ log_path }}
+{% endfor %}
+{% endif %}
+{% if nginx_agent_data_plane_config['reload_backoff'] is defined and nginx_agent_data_plane_config['reload_backoff'] is mapping %}
+    reload_backoff:
+{% if nginx_agent_data_plane_config['reload_backoff']['initial_interval'] is defined %}
+      initial_interval: {{ nginx_agent_data_plane_config['reload_backoff']['initial_interval'] }}
+{% endif %}
+{% if nginx_agent_data_plane_config['reload_backoff']['max_interval'] is defined %}
+      max_interval: {{ nginx_agent_data_plane_config['reload_backoff']['max_interval'] }}
+{% endif %}
+{% if nginx_agent_data_plane_config['reload_backoff']['max_elapsed_time'] is defined %}
+      max_elapsed_time: {{ nginx_agent_data_plane_config['reload_backoff']['max_elapsed_time'] }}
+{% endif %}
+{% if nginx_agent_data_plane_config['reload_backoff']['randomization_factor'] is defined %}
+      randomization_factor: {{ nginx_agent_data_plane_config['reload_backoff']['randomization_factor'] }}
+{% endif %}
+{% if nginx_agent_data_plane_config['reload_backoff']['multiplier'] is defined %}
+      multiplier: {{ nginx_agent_data_plane_config['reload_backoff']['multiplier'] }}
+{% endif %}
+{% endif %}
+{% endif %}
+
+{% set _has_client = nginx_agent_client is defined and nginx_agent_client is mapping %}
+{% if _has_client %}
+client:
+{% if nginx_agent_client['http'] is defined and nginx_agent_client['http'] is mapping %}
+  http:
+{% if nginx_agent_client['http']['timeout'] is defined %}
+    timeout: {{ nginx_agent_client['http']['timeout'] }}
+{% endif %}
+{% endif %}
+{% if nginx_agent_client['grpc'] is defined and nginx_agent_client['grpc'] is mapping %}
+  grpc:
+{% if nginx_agent_client['grpc']['keepalive'] is defined and nginx_agent_client['grpc']['keepalive'] is mapping %}
+    keepalive:
+{% if nginx_agent_client['grpc']['keepalive']['timeout'] is defined %}
+      timeout: {{ nginx_agent_client['grpc']['keepalive']['timeout'] }}
+{% endif %}
+{% if nginx_agent_client['grpc']['keepalive']['time'] is defined %}
+      time: {{ nginx_agent_client['grpc']['keepalive']['time'] }}
+{% endif %}
+{% if nginx_agent_client['grpc']['keepalive']['permit_without_stream'] is defined and nginx_agent_client['grpc']['keepalive']['permit_without_stream'] is boolean %}
+      permit_without_stream: {{ nginx_agent_client['grpc']['keepalive']['permit_without_stream'] | ternary('true', 'false') }}
+{% endif %}
+{% endif %}
+{% if nginx_agent_client['grpc']['max_message_size'] is defined %}
+    max_message_size: {{ nginx_agent_client['grpc']['max_message_size'] }}
+{% endif %}
+{% if nginx_agent_client['grpc']['max_message_receive_size'] is defined %}
+    max_message_receive_size: {{ nginx_agent_client['grpc']['max_message_receive_size'] }}
+{% endif %}
+{% if nginx_agent_client['grpc']['max_message_send_size'] is defined %}
+    max_message_send_size: {{ nginx_agent_client['grpc']['max_message_send_size'] }}
+{% endif %}
+{% if nginx_agent_client['grpc']['max_file_size'] is defined %}
+    max_file_size: {{ nginx_agent_client['grpc']['max_file_size'] }}
+{% endif %}
+{% if nginx_agent_client['grpc']['response_timeout'] is defined %}
+    response_timeout: {{ nginx_agent_client['grpc']['response_timeout'] }}
+{% endif %}
+{% if nginx_agent_client['grpc']['file_chunk_size'] is defined %}
+    file_chunk_size: {{ nginx_agent_client['grpc']['file_chunk_size'] }}
+{% endif %}
+{% if nginx_agent_client['grpc']['max_parallel_file_operations'] is defined %}
+    max_parallel_file_operations: {{ nginx_agent_client['grpc']['max_parallel_file_operations'] }}
+{% endif %}
+{% endif %}
+{% if nginx_agent_client['backoff'] is defined and nginx_agent_client['backoff'] is mapping %}
+  backoff:
+{% if nginx_agent_client['backoff']['initial_interval'] is defined %}
+    initial_interval: {{ nginx_agent_client['backoff']['initial_interval'] }}
+{% endif %}
+{% if nginx_agent_client['backoff']['max_interval'] is defined %}
+    max_interval: {{ nginx_agent_client['backoff']['max_interval'] }}
+{% endif %}
+{% if nginx_agent_client['backoff']['max_elapsed_time'] is defined %}
+    max_elapsed_time: {{ nginx_agent_client['backoff']['max_elapsed_time'] }}
+{% endif %}
+{% if nginx_agent_client['backoff']['randomization_factor'] is defined %}
+    randomization_factor: {{ nginx_agent_client['backoff']['randomization_factor'] }}
+{% endif %}
+{% if nginx_agent_client['backoff']['multiplier'] is defined %}
+    multiplier: {{ nginx_agent_client['backoff']['multiplier'] }}
+{% endif %}
+{% endif %}
+{% endif %}
+
+{% macro render_command_block(server_var, tls_var) %}
+  server:
+    host: {{ server_var['host'] }}
+    port: {{ server_var['port'] }}
+{% if server_var['data_plane_key'] is defined or server_var['tokenpath'] is defined %}
+  auth:
+{% if server_var['data_plane_key'] is defined %}
+    token: {{ server_var['data_plane_key'] }}
+{% endif %}
+{% if server_var['tokenpath'] is defined %}
+    tokenpath: {{ server_var['tokenpath'] }}
+{% endif %}
+{% endif %}
+{% if tls_var is defined and tls_var is mapping %}
+  tls:
+    skip_verify: {{ tls_var['skip_verify'] | default(false) | bool }}
+{% if tls_var['cert'] is defined %}
+    cert: {{ tls_var['cert'] }}
+{% endif %}
+{% if tls_var['key'] is defined %}
+    key: {{ tls_var['key'] }}
+{% endif %}
+{% if tls_var['ca'] is defined %}
+    ca: {{ tls_var['ca'] }}
+{% endif %}
+{% if tls_var['server_name'] is defined %}
+    server_name: {{ tls_var['server_name'] }}
+{% endif %}
+{% endif %}
+{% endmacro %}
+
+{% if nginx_agent_server is defined and nginx_agent_server is mapping %}
+command:
+{{ render_command_block(nginx_agent_server, nginx_agent_tls | default(omit)) }}
+{% endif %}
+
+{% if nginx_agent_auxiliary_command is defined and nginx_agent_auxiliary_command is mapping %}
+auxiliary_command:
+{{ render_command_block(nginx_agent_auxiliary_command, nginx_agent_auxiliary_command_tls | default(omit)) }}
+{% endif %}
+
+allowed_directories:
+{% for directory in nginx_agent_allowed_directories %}
+  - {{ directory }}
+{% endfor %}
+
+{% if nginx_agent_collector is defined and nginx_agent_collector is mapping %}
+collector:
+{{ nginx_agent_collector | to_nice_yaml(indent=2) | indent(2, first=true) }}
+{% endif %}
+
+{% if nginx_agent_external_data_source is defined and nginx_agent_external_data_source is mapping %}
+external_data_source:
+{% if nginx_agent_external_data_source['proxy_url'] is defined %}
+  proxy:
+    url: {{ nginx_agent_external_data_source['proxy_url'] }}
+{% endif %}
+{% if nginx_agent_external_data_source['allowed_domains'] is defined
+     and nginx_agent_external_data_source['allowed_domains'] is not mapping
+     and nginx_agent_external_data_source['allowed_domains'] is not string
+     and nginx_agent_external_data_source['allowed_domains'] | length > 0 %}
+  allowed_domains:
+{% for domain in nginx_agent_external_data_source['allowed_domains'] %}
+    - {{ domain }}
+{% endfor %}
+{% endif %}
+{% if nginx_agent_external_data_source['max_bytes'] is defined %}
+  max_bytes: {{ nginx_agent_external_data_source['max_bytes'] }}
+{% endif %}
+{% endif %}

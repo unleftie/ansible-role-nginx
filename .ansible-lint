@@ -1,6 +1,7 @@
 ---
+exclude_paths:
+  - .github/
 skip_list:
-  - name[casing]
   - name[template]
   - key-order[task]
   - name[missing]

@@ -1,5 +1,5 @@
 ---
-- name: Validate distribution and role variables
+- name: Validate Ansible/Jinja2 version, Ansible collections, role variables, and supported distributions
   ansible.builtin.include_tasks: "{{ role_path }}/tasks/validate/validate.yml"
   tags: nginx_validate
 
@@ -11,7 +11,6 @@
 - name: Set up signing keys
   ansible.builtin.include_tasks: "{{ role_path }}/tasks/keys/setup-keys.yml"
   when: (nginx_enable | bool and nginx_install_from == 'nginx_repository')
-        or nginx_amplify_enable | bool
   tags: nginx_key
 
 - name: "{{ nginx_setup | capitalize }} NGINX"
@@ -85,9 +84,15 @@
   when:
     - nginx_state != "absent"
 
-- name: Install NGINX Amplify
-  include_tasks: "{{ role_path }}/tasks/amplify/install-amplify.yml"
+- name: Install and configure NGINX Plus keepalived HA
+  ansible.builtin.include_tasks: "{{ role_path }}/tasks/modules/install-packages.yml"
   when:
-    - nginx_amplify_enable | bool
-    - nginx_amplify_api_key is defined
-    - nginx_amplify_api_key | length > 0
+    - nginx_keepalived_enable | bool or nginx_keepalived_conf_enable | bool
+    - nginx_type == 'plus'
+    - nginx_state != 'absent'
+  tags: nginx_keepalived
+
+- name: Install NGINX Agent
+  ansible.builtin.include_tasks: "{{ role_path }}/tasks/agent/install-agent.yml"
+  when: nginx_agent_enable | bool
+  tags: nginx_install_agent

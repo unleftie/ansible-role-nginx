@@ -28,7 +28,15 @@ cd ansible-role-nginx/
 molecule test
 ```
 
-## Installation
+- For ease of use, you can install and/or upgrade Molecule, the Molecule plugins package, and the Docker Python SDK by running the following command on your Ansible host:
+
+  ```bash
+  pip install --upgrade -r https://raw.githubusercontent.com/nginx/ansible-role-nginx/main/.github/workflows/requirements/requirements_molecule.txt
+  ```
+
+## Role Installation
+
+This role can be installed via either Ansible Galaxy (the Ansible community marketplace) or by cloning this repo. Once installed, you will need to include the role in your Ansible playbook using [the `roles` keyword, the `import_role` module, or the `include_role` module](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#using-roles).
 
 > Upgradability notice: When upgrading from old version of this role, be aware that some files may be lost.
 
