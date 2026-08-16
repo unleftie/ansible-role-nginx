@@ -3,12 +3,21 @@ dependencies: []
 
 galaxy_info:
   role_name: nginx
-  company: F5, Inc.
-
-  license: Apache License, Version 2.0
-
-  min_ansible_version: '2.16'
-
+  author: unleftie
+  description: Role for nginx setup
+  company: ""
+  license: "license (MIT)"
+  min_ansible_version: "2.16"
+  platforms:
+    - name: Debian
+      versions:
+        - bookworm
+    - name: Ubuntu
+      versions:
+        - jammy
+    - name: EL
+      versions:
+        - "9"
   galaxy_tags:
     - web
     - system

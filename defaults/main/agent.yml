@@ -3,7 +3,6 @@
 # Requires access to either the NGINX stub_status or the NGINX Plus REST API.
 nginx_agent_enable: false
 
-
 ########################################################################################################################
 # The following parameters let you configure the static configuration file of NGINX Agent.                             #
 # By default, the config produced is as close a match to the default config provided by NGINX Agent upon installation. #

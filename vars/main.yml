@@ -134,7 +134,8 @@ nginx_alpine_dependencies: [ca-certificates, coreutils, openssl, pcre2]
 nginx_amazon_dependencies: [ca-certificates]
 
 # Debian dependencies
-nginx_debian_dependencies: [apt-transport-https, ca-certificates, gnupg, gpg-agent]
+nginx_debian_dependencies:
+  [apt-transport-https, ca-certificates, gnupg, gpg-agent]
 
 # FreeBSD dependencies
 nginx_freebsd_dependencies: [security/ca_root_nss]
@@ -156,4 +157,34 @@ openssl_version: 3.0.7
 nginx_modules_list: [geoip, image-filter, njs, perl, xslt]
 
 # Supported NGINX Plus dynamic modules
-nginx_plus_modules_list: [auth-spnego, brotli, encrypted-session, geoip, geoip2, ha-keepalived, headers-more, image-filter, lua, ndk, njs, passenger, perl, prometheus, rtmp, set-misc, subs-filter, xslt]
+nginx_plus_modules_list:
+  [
+    auth-spnego,
+    brotli,
+    encrypted-session,
+    geoip,
+    geoip2,
+    ha-keepalived,
+    headers-more,
+    image-filter,
+    lua,
+    ndk,
+    njs,
+    passenger,
+    perl,
+    prometheus,
+    rtmp,
+    set-misc,
+    subs-filter,
+    xslt,
+  ]
+
+nginx_dhparam_path: "/etc/ssl/certs/dhparam.pem"
+
+# selfsigned
+nginx_selfsigned_key_path: "/etc/ssl/private/nginx-selfsigned.key"
+nginx_selfsigned_cert_path: "/etc/ssl/certs/nginx-selfsigned-cert.pem"
+
+nginx_cloudflare_ca_cert_url: "https://developers.cloudflare.com/ssl/static/authenticated_origin_pull_ca.pem"
+
+nginx_apt_autoupdate_configure: true

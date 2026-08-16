@@ -119,8 +119,7 @@ nginx_install_epel_release: true
 # Format is list with either the dynamic module name or a dictionary (see njs for an example).
 # When using a dictionary, the default value for state is present, and for version it's nginx_version if specified.
 # Default is an empty list (no dynamic modules are installed).
-nginx_modules:
-  []
+nginx_modules: []
   # - auth-spnego  # NGINX Plus
   # - brotli  # NGINX Plus
   # - cookie-flag  # NGINX Plus
