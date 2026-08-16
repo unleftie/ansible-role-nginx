@@ -7,7 +7,7 @@
 
 | Platform | Version |
 | -------- | ------- |
-| debian   | 12      |
+| ubuntu   | 26.04   |
 
 ## Dependencies
 
@@ -25,6 +25,7 @@
 ```sh
 git clone https://github.com/unleftie/ansible-role-nginx.git
 cd ansible-role-nginx/
+ansible-galaxy install -r requirements.yml
 molecule test
 ```
 
@@ -34,26 +35,13 @@ molecule test
   pip install --upgrade -r https://raw.githubusercontent.com/nginx/ansible-role-nginx/main/.github/workflows/requirements/requirements_molecule.txt
   ```
 
-## Role Installation
+## Installation
 
-This role can be installed via either Ansible Galaxy (the Ansible community marketplace) or by cloning this repo. Once installed, you will need to include the role in your Ansible playbook using [the `roles` keyword, the `import_role` module, or the `include_role` module](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#using-roles).
-
-> Upgradability notice: When upgrading from old version of this role, be aware that some files may be lost.
-
-```yml
-- name: Sample 1
-  hosts: all
-  become: true
-  pre_tasks:
-    - name: Ensure apt cache are updated
-      apt:
-        update_cache: true
-        cache_valid_time: 3600
-      when: ansible_os_family == "Debian"
-  tasks:
-    - include_role:
-        name: "ansible-role-nginx"
+```sh
+ansible-galaxy install -r requirements.yml
 ```
+
+Example [playbook](main.yml)
 
 ## 📝 License
 
